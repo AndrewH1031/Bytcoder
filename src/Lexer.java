@@ -7,88 +7,189 @@
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 
 //NOTE: Code is currently still very incomplete, just messing around
 
+
+
 public class Lexer {
 
-  public static void main(String src) {
-
-    File fileList = new File(src);
-
-    int counter = 0; //Probably gonna need this for when we start counting our lex outputs
-     //string to grab the current whole string (not just one token), which will help us with our pointer
-    String token; //char to grab our current soon-to-be token (one at a time) from the file
-    String string;
-
-    //for(int i = 0; i < tokenList.length(); i++) { //Won"t work, currently figuring out another method besides scanner
 
 
-    try {
-    //Basic list stuff to handle our input and token dump
-    Scanner tokenList = new Scanner(fileList);
+    public static void main(String src) {
 
-        while (tokenList.hasNextLine()) {
-            //System.out.println("IOU one lexer");
-            string = tokenList.nextLine();
-            token = "";
+        ArrayList<Token> list = new ArrayList<>();
+        File fileList = new File(src);
 
-            for (int i = 0; i < string.length(); i++) {
+        int counter = 1; //Counts our token's position
+        int programCounter = 1; //Counts the number of programs we've lexed through
+     
+        String token = ""; //char to grab our current soon-to-be token (one at a time) from the file
+        String string = ""; //string to grab the current whole string (not just one token), which will help us with our pointer
 
-                //Check to see if comment
-                //Check to see if string
+        boolean inAComment = false;
+        boolean inAString = false;
 
-                token = token + string.charAt(i);
-                //System.out.println(token);
-                //System.out.println(string);
+        //for(int i = 0; i < tokenList.length(); i++) { //Won"t work, currently figuring out another method besides scanner
 
-                /*if(token == "$") {
-                    System.out.println("$ sign");
+
+        try {
+        //Basic list stuff to handle our input and token dump
+        Scanner tokenList = new Scanner(fileList);
+
+            System.out.println();
+            System.out.println("Lexing program " + programCounter + "...");
+            while (tokenList.hasNextLine()) {
+                //System.out.println("IOU one lexer");
+                string = tokenList.nextLine();
+                token = ""; //dump this once you have the full thing set up
+
+                
+                
+                for (int i = 0; i < string.length(); i++) {
+                    token = token + string.charAt(i);
+                    
+                    //System.out.println(token);
+                    //System.out.println(string);
+
+                    //Switch statement to determine what we should do with our token
+                    //Vaguely follows the grammar order from the project 1 grammar.pdf
+                    switch(token) {
+                        case "$":
+                        System.out.println("DEBUG LEXER - [ $ ] found at position (" + programCounter + " : " + counter + ")");
+                            token = "";
+                            counter = 1;
+                            programCounter++;
+                            System.out.println("Lexing completed!");
+                            if(tokenList.hasNextLine()) {
+                                System.out.println();
+                                System.out.println("Lexing program " + programCounter + "...");
+                            }
+                        break;
+                        case "{":
+                            list.add(new Token("OPEN_BRACKET", "{", programCounter, counter));
+                            System.out.println("DEBUG LEXER - [ { ] found at position (" + programCounter + " : " + counter + ")");
+                            token = "";
+                            counter++;
+                        break;
+                        case "}":
+                            list.add(new Token("CLOSE_BRACKET", "}", programCounter, counter));
+                            System.out.println("DEBUG LEXER - [ } ] found at position (" + programCounter + " : " + counter + ")");
+                            token = "";
+                            counter++;
+                        break;
+                        case "(":
+                        System.out.println("DEBUG LEXER - [ ( ] found at position (" + programCounter + " : " + counter + ")");
+                            token = "";
+                            counter++;
+                        break;
+                        case ")":
+                            System.out.println("DEBUG LEXER - [ ) ] found at position (" + programCounter + " : " + counter + ")");
+                            token = "";
+                            counter++;
+                        break;
+                        case "=":
+                            System.out.println("= sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "\'":
+                            System.out.println("\' sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "\"":
+                            System.out.println("\" sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "+":
+                            System.out.println("+ sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "print":
+                            System.out.println("print sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "while":
+                            System.out.println("while sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "if":
+                            System.out.println("if sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "int":
+                            System.out.println("type int sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "string":
+                            System.out.println("type string sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "ID":
+                            System.out.println("type ID sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "boolean":
+                            System.out.println("boolean sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "true":
+                            System.out.println("boolean value: true sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "false":
+                            System.out.println("boolean value: false sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "==":
+                            System.out.println("boolean operator: equal to sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "!=":
+                            System.out.println("boolean operator: not equal to sign");
+                            token = "";
+                            counter++;
+                        break;
+
+                        //Everything below this is purely for testing purposes right now
+                        case "/*":
+                            System.out.println("I'M GOIN' COMMENT MODE!!!!1!!");
+                            inAComment = true;
+                            token = "";
+                            counter++;
+                            //Pass to inAComment boolean at beginning of loop
+                        break;
+                        case " ":
+                            System.out.println("space sign");
+                            token = "";
+                        break;
+                        case "a":
+                            System.out.println("a sign");
+                            token = "";
+                        break;
+                        case "b":
+                            System.out.println("b sign");
+                            token = "";
+                        break;
+                        default:
+                        //Nothing here on purpose, we want to skip over white space
+                    }
                 }
-                else if(token == "print") {
-                    System.out.println("print sign");
-                }
-                else {
-
-                }*/
-
-                //Switch statement to determine what we should do with our token
-                //Vaguely follows the grammar order from the project 1 grammar.pdf
-                switch(token) {
-                    case "$":
-                        System.out.println("$ sign");
-                    break;
-                    case "{":
-                        System.out.println("{ sign");
-                    break;
-                    case "}":
-                        System.out.println("} sign");
-                    break;
-                    case "(":
-                        System.out.println("( sign");
-                    break;
-                    case ")":
-                        System.out.println(") sign");
-                    break;
-                    case "=":
-                        System.out.println("= sign");
-                    break;
-                    case "\'":
-                        System.out.println("\" sign");
-                        //comment
-                    break;
-                    case "\"":
-                        System.out.println("\" sign");
-                        //comment
-                    break;
-                    case "print":
-                        System.out.println("print sign");
-                        //comment
-                    break;
-                    default:
-                }  
             }
-        } 
     tokenList.close(); 
     }
     
