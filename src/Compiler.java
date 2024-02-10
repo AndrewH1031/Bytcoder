@@ -1,4 +1,4 @@
-package src;
+//package src; - disabled for now
 
 public class Compiler {
     
