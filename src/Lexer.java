@@ -27,14 +27,13 @@ public class Lexer {
         int lineCounter = 1;
         
      
-        String token = ""; //char to grab our current soon-to-be token (one at a time) from the file
+        String stringolon = ""; //char to grab our current soon-to-be token (one at a time) from the file
         String string = ""; //string to grab the current whole string (not just one token), which will help us with our pointer
 
         boolean inAComment = false;
         boolean inAString = false;
 
-        //for(int i = 0; i < tokenList.length(); i++) { //Won"t work, currently figuring out another method besides scanner
-
+        char symbolon = ' ';
 
         try {
         //Basic list stuff to handle our input and token dump
@@ -45,23 +44,25 @@ public class Lexer {
             while (tokenList.hasNextLine()) {
                 //System.out.println("IOU one lexer");
                 string = tokenList.nextLine();
-                token = ""; //dump this once you have the full thing set up
+                stringolon = ""; //dump this once you have the full thing set up
                 lineCounter++;
 
-                
-                
                 for (int i = 0; i < string.length(); i++) {
-                    token = token + string.charAt(i);
+                    symbolon = ' ';
+                    stringolon = stringolon + string.charAt(i);
+
+                    //Works much better than combing our string for symbols
+                    symbolon = string.charAt(i);
                     
-                    //System.out.println(token);
+                    //System.out.println(symbolon);
+                    //System.out.println(stringolon);
                     //System.out.println(string);
 
-                    //Switch statement to determine what we should do with our token
+                    //Switch statement to determine what we should do with our symbol tokens
                     //Vaguely follows the grammar order from the project 1 grammar.pdf
-                    switch(token) {
-                        case "$":
+                    switch(symbolon) {
+                        case '$':
                         System.out.println("DEBUG LEXER - [ $ ] found at position (" + lineCounter + " : " + counter + ") - Program " + programCounter);
-                            token = "";
                             counter = 1;
                             programCounter++;
                             System.out.println("Lexing completed!");
@@ -70,155 +71,105 @@ public class Lexer {
                                 System.out.println("Lexing program " + programCounter + "...");
                             }
                         break;
-                        case "{":
+                        case '{':
                             list.add(new Token("OPEN_BRACKET", "{", lineCounter, counter, programCounter));
                             System.out.println("DEBUG LEXER - [ { ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            token = "";
                             counter++;
                         break;
-                        case "}":
+                        case '}':
                             list.add(new Token("CLOSE_BRACKET", "}", lineCounter, counter, programCounter));
                             System.out.println("DEBUG LEXER - [ } ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            token = "";
                             counter++;
                         break;
-                        case "(":
-<<<<<<< HEAD
+                        case '(':
                             list.add(new Token("OPEN_PARENTHESES", "(", lineCounter, counter, programCounter));
                             System.out.println("DEBUG LEXER - [ ( ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-=======
-                        list.add(new Token("OPEN_PARENTHESES", "{", lineCounter, counter, programCounter));
-                        System.out.println("DEBUG LEXER - [ ( ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
->>>>>>> 08fec120bd54e08076a1b245e7e0de190df155d6
-                            token = "";
                             counter++;
                         break;
-                        case ")":
-<<<<<<< HEAD
+                        case ')':
                             list.add(new Token("CLOSE_PARENTHESES", ")", lineCounter, counter, programCounter));
-=======
-                            list.add(new Token("CLOSE_PARENTHESES", "{", lineCounter, counter, programCounter));
->>>>>>> 08fec120bd54e08076a1b245e7e0de190df155d6
                             System.out.println("DEBUG LEXER - [ ) ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            token = "";
                             counter++;
                         break;
-                        case "=":
-<<<<<<< HEAD
+                        case '=':
                             list.add(new Token("ASSIGN_OP", "=", lineCounter, counter, programCounter));
                             System.out.println("DEBUG LEXER - [ = ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-=======
-                            System.out.println("= sign");
->>>>>>> 08fec120bd54e08076a1b245e7e0de190df155d6
-                            token = "";
                             counter++;
                         break;
-                        case "\'":
-<<<<<<< HEAD
+                        case '\'':
                             list.add(new Token("CHAR", "=", lineCounter, counter, programCounter));
                             System.out.println("DEBUG LEXER - [ \' ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-=======
-                            System.out.println("\' sign");
->>>>>>> 08fec120bd54e08076a1b245e7e0de190df155d6
-                            token = "";
                             counter++;
                         break;
-                        case "\"":
-<<<<<<< HEAD
+                        case '\"':
                             list.add(new Token("STRING", "\"", lineCounter, counter, programCounter));
                             System.out.println("DEBUG LEXER - [ \" ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            
                             counter++;
                         break;
-                        case "+":
+                        case '+':
                             list.add(new Token("PLUS", "=", lineCounter, counter, programCounter));
                             System.out.println("DEBUG LEXER - [ + ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-=======
-                            System.out.println("\" sign");
-                            token = "";
                             counter++;
                         break;
-                        case "+":
-                            System.out.println("+ sign");
->>>>>>> 08fec120bd54e08076a1b245e7e0de190df155d6
-                            token = "";
-                            counter++;
+                        case ' ':
+                            System.out.println("DEBUG LEXER - [ + ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
                         break;
-                        case "print":
-                            System.out.println("print sign");
-                            token = "";
-                            counter++;
+                        case 'a': //test
+                            System.out.println("DEBUG LEXER - [ + ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                            
                         break;
-                        case "while":
-                            System.out.println("while sign");
-                            token = "";
-                            counter++;
-                        break;
-                        case "if":
-                            System.out.println("if sign");
-                            token = "";
-                            counter++;
-                        break;
-                        case "int":
-                            System.out.println("type int sign");
-                            token = "";
-                            counter++;
-                        break;
-                        case "string":
-                            System.out.println("type string sign");
-                            token = "";
-                            counter++;
-                        break;
-                        case "ID":
-                            System.out.println("type ID sign");
-                            token = "";
-                            counter++;
-                        break;
-                        case "boolean":
-                            System.out.println("boolean sign");
-                            token = "";
-                            counter++;
-                        break;
-                        case "true":
-                            System.out.println("boolean value: true sign");
-                            token = "";
-                            counter++;
-                        break;
-                        case "false":
-                            System.out.println("boolean value: false sign");
-                            token = "";
-                            counter++;
-                        break;
-                        case "==":
-                            System.out.println("boolean operator: equal to sign");
-                            token = "";
-                            counter++;
-                        break;
-                        case "!=":
-                            System.out.println("boolean operator: not equal to sign");
-                            token = "";
-                            counter++;
+                        case 'b': //test
+                            System.out.println("DEBUG LEXER - [ + ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                            
                         break;
 
-                        //Everything below this is purely for testing purposes right now
+                        /*Everything below this is purely for testing purposes right now
                         case "/*":
                             System.out.println("I'M GOIN' COMMENT MODE!!!!1!!");
                             inAComment = true;
-                            token = "";
+                            
                             counter++;
                             //Pass to inAComment boolean at beginning of loop
                         break;
-                        case " ":
-                            System.out.println("space sign");
-                            token = "";
+                        */
+                    }
+                    //New switch statement to handle our string inputs
+                    switch(stringolon) {
+                        case "string":
+                        System.out.println("DEBUG LEXER - [ string ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                        counter++;
                         break;
-                        case "a":
-                            System.out.println("a sign");
-                            token = "";
+                        case "int":
+                        System.out.println("DEBUG LEXER - [ int ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                        counter++;
                         break;
-                        case "b":
-                            System.out.println("b sign");
-                            token = "";
+                        case "print":
+                        System.out.println("DEBUG LEXER - [ print ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                        counter++;
+                        break;
+                        case "ID":
+                            System.out.println("DEBUG LEXER - [ ID ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                            counter++;
+                        break;
+                        case "boolean":
+                            System.out.println("DEBUG LEXER - [ bool ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                            counter++;
+                        break;
+                        case "true":
+                            System.out.println("DEBUG LEXER - [ true ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                            counter++;
+                        break;
+                        case "false":
+                            System.out.println("DEBUG LEXER - [ false ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                            counter++;
+                        break;
+                        case "==":
+                            System.out.println("DEBUG LEXER - [ == ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                            counter++;
+                        break;
+                        case "!=":
+                            System.out.println("DEBUG LEXER - [ != ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                            counter++;
                         break;
                         default:
                         //Nothing here on purpose, we want to skip over white space
