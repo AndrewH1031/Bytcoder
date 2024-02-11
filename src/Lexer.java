@@ -24,6 +24,8 @@ public class Lexer {
 
         int counter = 1; //Counts our token's position
         int programCounter = 1; //Counts the number of programs we've lexed through
+        int lineCounter = 1;
+        
      
         String token = ""; //char to grab our current soon-to-be token (one at a time) from the file
         String string = ""; //string to grab the current whole string (not just one token), which will help us with our pointer
@@ -44,6 +46,7 @@ public class Lexer {
                 //System.out.println("IOU one lexer");
                 string = tokenList.nextLine();
                 token = ""; //dump this once you have the full thing set up
+                lineCounter++;
 
                 
                 
@@ -57,7 +60,7 @@ public class Lexer {
                     //Vaguely follows the grammar order from the project 1 grammar.pdf
                     switch(token) {
                         case "$":
-                        System.out.println("DEBUG LEXER - [ $ ] found at position (" + programCounter + " : " + counter + ")");
+                        System.out.println("DEBUG LEXER - [ $ ] found at position (" + lineCounter + " : " + counter + ") - Program " + programCounter);
                             token = "";
                             counter = 1;
                             programCounter++;
@@ -68,24 +71,26 @@ public class Lexer {
                             }
                         break;
                         case "{":
-                            list.add(new Token("OPEN_BRACKET", "{", programCounter, counter));
-                            System.out.println("DEBUG LEXER - [ { ] found at position (" + programCounter + " : " + counter + ")");
+                            list.add(new Token("OPEN_BRACKET", "{", lineCounter, counter, programCounter));
+                            System.out.println("DEBUG LEXER - [ { ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
                             token = "";
                             counter++;
                         break;
                         case "}":
-                            list.add(new Token("CLOSE_BRACKET", "}", programCounter, counter));
-                            System.out.println("DEBUG LEXER - [ } ] found at position (" + programCounter + " : " + counter + ")");
+                            list.add(new Token("CLOSE_BRACKET", "}", lineCounter, counter, programCounter));
+                            System.out.println("DEBUG LEXER - [ } ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
                             token = "";
                             counter++;
                         break;
                         case "(":
-                        System.out.println("DEBUG LEXER - [ ( ] found at position (" + programCounter + " : " + counter + ")");
+                        list.add(new Token("OPEN_PARENTHESES", "{", lineCounter, counter, programCounter));
+                        System.out.println("DEBUG LEXER - [ ( ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
                             token = "";
                             counter++;
                         break;
                         case ")":
-                            System.out.println("DEBUG LEXER - [ ) ] found at position (" + programCounter + " : " + counter + ")");
+                            list.add(new Token("CLOSE_PARENTHESES", "{", lineCounter, counter, programCounter));
+                            System.out.println("DEBUG LEXER - [ ) ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
                             token = "";
                             counter++;
                         break;
