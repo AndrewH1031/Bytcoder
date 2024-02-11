@@ -9,13 +9,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
-//NOTE: Code is currently still very incomplete, just messing around
-
-
+//NOTE: Code is currently kind of incomplete, just messing around
 
 public class Lexer {
-
-
 
     public static void main(String src) {
 
@@ -62,7 +58,7 @@ public class Lexer {
                     //Vaguely follows the grammar order from the project 1 grammar.pdf
                     switch(symbolon) {
                         case '$':
-                        System.out.println("DEBUG LEXER - [ $ ] found at position (" + lineCounter + " : " + counter + ") - Program " + programCounter);
+                        System.out.println("DEBUG LEXER - EOP [ $ ] found at position (" + lineCounter + " : " + counter + ") - Program " + programCounter);
                             counter = 1;
                             programCounter++;
                             System.out.println("Lexing completed!");
@@ -72,55 +68,40 @@ public class Lexer {
                             }
                         break;
                         case '{':
-                            list.add(new Token("OPEN_BRACKET", "{", lineCounter, counter, programCounter));
-                            System.out.println("DEBUG LEXER - [ { ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            /*list.add(new Token("OPEN_BLOCK", "{", lineCounter, counter, programCounter, counter));
+                            System.out.println("DEBUG LEXER - OPEN_BLOCK [ { ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                            counter++;*/
+                            handleToken(list, "OPEN_BLOCK", "{", lineCounter, counter, programCounter, counter);
                         break;
                         case '}':
-                            list.add(new Token("CLOSE_BRACKET", "}", lineCounter, counter, programCounter));
-                            System.out.println("DEBUG LEXER - [ } ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "CLOSE_BLOCK", "}", lineCounter, counter, programCounter, counter);
                         break;
                         case '(':
-                            list.add(new Token("OPEN_PARENTHESES", "(", lineCounter, counter, programCounter));
-                            System.out.println("DEBUG LEXER - [ ( ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "OPEN_PAREN", "(", lineCounter, counter, programCounter, counter);
                         break;
                         case ')':
-                            list.add(new Token("CLOSE_PARENTHESES", ")", lineCounter, counter, programCounter));
-                            System.out.println("DEBUG LEXER - [ ) ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "CLOSE_BLOCK", ")", lineCounter, counter, programCounter, counter);
                         break;
                         case '=':
-                            list.add(new Token("ASSIGN_OP", "=", lineCounter, counter, programCounter));
-                            System.out.println("DEBUG LEXER - [ = ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "ASSIGNOP", "=", lineCounter, counter, programCounter, counter);
                         break;
                         case '\'':
-                            list.add(new Token("CHAR", "=", lineCounter, counter, programCounter));
-                            System.out.println("DEBUG LEXER - [ \' ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "CHAR", "\'", lineCounter, counter, programCounter, counter);
                         break;
                         case '\"':
-                            list.add(new Token("STRING", "\"", lineCounter, counter, programCounter));
-                            System.out.println("DEBUG LEXER - [ \" ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "CHAR", "\"", lineCounter, counter, programCounter, counter);
                         break;
                         case '+':
-                            list.add(new Token("PLUS", "=", lineCounter, counter, programCounter));
-                            System.out.println("DEBUG LEXER - [ + ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "INTOP", "+", lineCounter, counter, programCounter, counter);
                         break;
                         case ' ':
-                            System.out.println("DEBUG LEXER - [ + ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+                            handleToken(list, "SPACE", " ", lineCounter, counter, programCounter, counter);
                         break;
                         case 'a': //test
-                            System.out.println("DEBUG LEXER - [ + ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            
+                            System.out.println("DEBUG LEXER - CHAR [ a ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
                         break;
                         case 'b': //test
-                            System.out.println("DEBUG LEXER - [ + ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            
+                            System.out.println("DEBUG LEXER - CHAR [ b ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
                         break;
 
                         /*Everything below this is purely for testing purposes right now
@@ -136,40 +117,37 @@ public class Lexer {
                     //New switch statement to handle our string inputs
                     switch(stringolon) {
                         case "string":
-                        System.out.println("DEBUG LEXER - [ string ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                        counter++;
+                            handleToken(list, "TYPE", "string", lineCounter, counter, programCounter, counter);
                         break;
                         case "int":
-                        System.out.println("DEBUG LEXER - [ int ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                        counter++;
+                            handleToken(list, "TYPE", "int", lineCounter, counter, programCounter, counter);
                         break;
                         case "print":
-                        System.out.println("DEBUG LEXER - [ print ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                        counter++;
+                            handleToken(list, "PRINTSTATEMENT", "print", lineCounter, counter, programCounter, counter);
                         break;
                         case "ID":
-                            System.out.println("DEBUG LEXER - [ ID ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "ID", "id", lineCounter, counter, programCounter, counter);
+                        break;
+                        case "while":
+                            handleToken(list, "WHILESTATEMENT", "while", lineCounter, counter, programCounter, counter);
+                        break;
+                        case "if":
+                            handleToken(list, "IFSTATEMENT", "if", lineCounter, counter, programCounter, counter);
                         break;
                         case "boolean":
-                            System.out.println("DEBUG LEXER - [ bool ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "TYPE", "bool", lineCounter, counter, programCounter, counter);
                         break;
                         case "true":
-                            System.out.println("DEBUG LEXER - [ true ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "BOOLVAL", "true", lineCounter, counter, programCounter, counter);
                         break;
                         case "false":
-                            System.out.println("DEBUG LEXER - [ false ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "BOOLVAL", "false", lineCounter, counter, programCounter, counter);
                         break;
                         case "==":
-                            System.out.println("DEBUG LEXER - [ == ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "BOOLOP", "==", lineCounter, counter, programCounter, counter);
                         break;
                         case "!=":
-                            System.out.println("DEBUG LEXER - [ != ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;
+                            handleToken(list, "BOOLOP", "!=", lineCounter, counter, programCounter, counter);
                         break;
                         default:
                         //Nothing here on purpose, we want to skip over white space
@@ -184,4 +162,11 @@ public class Lexer {
         noFile.printStackTrace();
     }
   }
+
+    public static void handleToken(ArrayList<Token> list, String tokenType, String tokenName, int linePos, int countPos, int progPos, int counter) {
+        //System.out.println("Use this to DEBUG");
+        list.add(new Token(tokenType, tokenName, linePos, countPos, progPos));
+        System.out.println("DEBUG LEXER - " + tokenType + " [ " + tokenName + " ]" + "found at position (" + linePos + " : " + countPos + ") - Program " + progPos);
+        counter++;
+    }
 }
