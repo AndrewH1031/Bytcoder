@@ -83,30 +83,48 @@ public class Lexer {
                             counter++;
                         break;
                         case "(":
+<<<<<<< HEAD
                             list.add(new Token("OPEN_PARENTHESES", "(", lineCounter, counter, programCounter));
                             System.out.println("DEBUG LEXER - [ ( ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+=======
+                        list.add(new Token("OPEN_PARENTHESES", "{", lineCounter, counter, programCounter));
+                        System.out.println("DEBUG LEXER - [ ( ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+>>>>>>> 08fec120bd54e08076a1b245e7e0de190df155d6
                             token = "";
                             counter++;
                         break;
                         case ")":
+<<<<<<< HEAD
                             list.add(new Token("CLOSE_PARENTHESES", ")", lineCounter, counter, programCounter));
+=======
+                            list.add(new Token("CLOSE_PARENTHESES", "{", lineCounter, counter, programCounter));
+>>>>>>> 08fec120bd54e08076a1b245e7e0de190df155d6
                             System.out.println("DEBUG LEXER - [ ) ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
                             token = "";
                             counter++;
                         break;
                         case "=":
+<<<<<<< HEAD
                             list.add(new Token("ASSIGN_OP", "=", lineCounter, counter, programCounter));
                             System.out.println("DEBUG LEXER - [ = ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+=======
+                            System.out.println("= sign");
+>>>>>>> 08fec120bd54e08076a1b245e7e0de190df155d6
                             token = "";
                             counter++;
                         break;
                         case "\'":
+<<<<<<< HEAD
                             list.add(new Token("CHAR", "=", lineCounter, counter, programCounter));
                             System.out.println("DEBUG LEXER - [ \' ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+=======
+                            System.out.println("\' sign");
+>>>>>>> 08fec120bd54e08076a1b245e7e0de190df155d6
                             token = "";
                             counter++;
                         break;
                         case "\"":
+<<<<<<< HEAD
                             list.add(new Token("STRING", "\"", lineCounter, counter, programCounter));
                             System.out.println("DEBUG LEXER - [ \" ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
                             
@@ -115,6 +133,14 @@ public class Lexer {
                         case "+":
                             list.add(new Token("PLUS", "=", lineCounter, counter, programCounter));
                             System.out.println("DEBUG LEXER - [ + ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
+=======
+                            System.out.println("\" sign");
+                            token = "";
+                            counter++;
+                        break;
+                        case "+":
+                            System.out.println("+ sign");
+>>>>>>> 08fec120bd54e08076a1b245e7e0de190df155d6
                             token = "";
                             counter++;
                         break;
