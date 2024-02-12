@@ -5,10 +5,10 @@
 //for teaching me how to read text from a file input, because I am not a perfect human being
 
 import java.util.Scanner;
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.File; //Import to take file input
+import java.io.FileNotFoundException; //Import for catch string at the end of the class
 import java.util.ArrayList;
-import java.util.regex.Pattern;
+import java.util.regex.Pattern; //Import to match our letters/digits with a matcher tool
 
 //NOTE: Code is currently able to properly lex project 1 sans letters, pretty good!
 
@@ -16,39 +16,44 @@ public class Lexer {
 
     public static void main(String src) {
 
-        ArrayList<Token> list = new ArrayList<>();
-        File fileList = new File(src); //This is what allows us to pass our test files to our scanner
+        ArrayList<Token> list = new ArrayList<>(); //New ArrayList to handle our input
+        File fileList = new File(src); //This is what allows us to pass our test files to our scanner, uses the src file which is where our Compiler.java file is located
 
-        int counter = 1;
-        int programCounter = 1;
-        int lineCounter = 0;
-        int errors = 0;
-        int warnings = 0;
+        int counter = 1; //Keeps track of the current token's position in a line, increments as we iterate through
+        int programCounter = 1; //Current program we're lexing through, increments every time we end a program with "$"
+        int lineCounter = 0; //Current line we're on in the program, increments every time we reach the beginning of a string
+        int errors = 0; //Amount of errors we get when lexing
+        int warnings = 0; //Amount of warnings we get when lexing
         
-     
-        String stringolon = ""; //String to grab our current soon-to-be tokens from the file
+        String stringolon = ""; //String to grab our current soon-to-be token from the file
+
+        //Not too sure what these do, I think I had them set up for something with letter matching...
+        //In any case, I'll let them stay here for now, I might need them later on
         String commentEnd = "\\*/";
         String compareLetters = "[a-zA-Z]";
 
-        boolean inAComment = false;
-        boolean inAString = false;
-        boolean isLetter = false;
-        boolean itsABracket = false;
-        boolean foundEndComment = false;
+        boolean inAComment = false; //Determines if we're currently in a comment
+        boolean inAString = false; //Determines if we're currently in a string
+        boolean itsABracket = false; //Determines if we're in an open bracket statement
+        boolean foundEndComment = false; //Determines if we've got the second half of the end comment token "*/"
 
         char symbolon = ' '; //Character to store the current input in the string, one at a time
         
+        //Try statement, we NEED this for our file input to work
         try {
         Scanner tokenList = new Scanner(fileList);
 
             System.out.println();
             System.out.println("Lexing program " + programCounter + "...");
+
             while(tokenList.hasNextLine()) {
-                //System.out.println("IOU one lexer");
-                String string = tokenList.nextLine();
                 //System.out.println(string.length());
+
+                //
+                String string = tokenList.nextLine();
+
                 stringolon = ""; //Resets stringolon every line
-                lineCounter++;
+                lineCounter++; //Increments line counter when we get to a new line
 
                 if(string.isEmpty()) {
                     System.out.println("WARNING LEXER - WARNING: Nothing Found on Line " + lineCounter);
@@ -66,26 +71,35 @@ public class Lexer {
                     
                     //If there's no end program symbol found at the end of our file input, throw a FATAL error
                     //Will print for the current line, working on optimizing this
-                    if(!tokenList.hasNextLine() && string.length() == i + 1) {
-                        if(string.charAt(i) != '$') { //Ensures it checks the absolute last character
-                            System.out.println("ERROR LEXER - Fatal Error: " + lineCounter + " : " + counter + " Missing Block Statement for Current Program");
-                            errors++;
-                            break;
+                    if(string.length() == i + 1) {
+                        if(!tokenList.hasNextLine()) {
+                            if(string.charAt(i) != '$') { //Ensures it checks the absolute last character
+                                System.out.println("ERROR LEXER - Fatal Error: " + lineCounter + " : " + counter + " Missing Block Statement for Current Program");
+                                errors++;
+                                break;
+                            }
                         }
                     }
 
                     //If we're in a comment, check to see if there's a matching end comment token we can use
                     if(inAComment == true) {
-                        if(string.charAt(i) == '*') {
-                            foundEndComment = true;
+                        
+                        switch(symbolon) {
+                            //We've got one half of the token we want
+                            case '*':
+                                foundEndComment = true;
+                            break;
+                            //Here's the other half we can find in another loop, but we still need another step to verify if we obtained the first half before
+                            case '/':
+                                //If we do have the other half, we can safely end the comment and reset foundEndComment
+                                if(foundEndComment = true) {
+                                    //System.out.println("Comments mode deactivated!"); //- use this to test
+                                    inAComment = false;
+                                    foundEndComment = false;
+                                }
+                            break;
                         }
-                        else if(string.charAt(i) == '/') {
-                            if(foundEndComment = true) {
-                                //System.out.println("Comments mode deactivated!"); //- use this to test
-                                inAComment = false;
-                                foundEndComment = false;
-                            }
-                        }
+                        //If we're at the end of the line and we still haven't gotten the second half, print an error
                         if(string.length() == i + 1) {
                             System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Comment Never Closed");
                             //Force close the comment
@@ -99,6 +113,7 @@ public class Lexer {
                             //System.out.println("String mode deactivated!"); //- use this to test
                             inAString = false;
                         }
+                        //Much like inAComment, if we're at the end of our current line and we don't have our quote pair token, print an error
                         if(string.length() == i + 1) {
                             System.out.println("ERROR Lexer - ERROR: String Statement Never Closed");
                             errors++;
@@ -141,8 +156,11 @@ public class Lexer {
                         break;
                         //Open bracket token
                         case '{':
+                            //Passes token to the handleToken class for processing
                             handleToken(list, "OPEN_BLOCK", "{", lineCounter, counter, programCounter);
+                            //Increments the counter
                             counter++;
+                            //
                             itsABracket = true;
                             stringolon = "";
                         break;
@@ -150,6 +168,7 @@ public class Lexer {
                         case '}':
                             handleToken(list, "CLOSE_BLOCK", "}", lineCounter, counter, programCounter);
                             counter++;
+                            //Error here for close bracket before open
                             itsABracket = false;
                             stringolon = "";
                         break;
@@ -164,6 +183,7 @@ public class Lexer {
                             handleToken(list, "CLOSE_BLOCK", ")", lineCounter, counter, programCounter);
                             counter++;
                             stringolon = "";
+                            //Error here for close paren before open
                         break;
                         //Assignment token
                         case '=':
@@ -339,7 +359,8 @@ public class Lexer {
                                 //System.out.println("COMMENTS MODE ACTIVATED!!!"); - use this to test
                                 inAComment = true;
                             }
-                        //Ending string token
+                        //Token to NOT end our comment string - this part is handled by our inAComment function!
+                        //Instead prints an error, since there's no way to get here if you formatted everything correctly
                         case "*/":
                             if(inAComment == false) {
                                 System.out.println("WARNING LEXER - WARNING: " + lineCounter + " : " + counter + " Comment End Detected Before Start");
@@ -356,6 +377,7 @@ public class Lexer {
                     }
                 }
             }
+        //Close our file input
         tokenList.close();
         }
     
@@ -365,10 +387,12 @@ public class Lexer {
         }
     }
 
+    //This does nothing, for now....
     public static void handleLetters(ArrayList<Token> list, String tokenType, String tokenName, int linePos, int countPos, int progPos) {
         //pass to handletoken class
     }
 
+    //handleToken array, which will neatly tokenize and print whatever token is passed to it
     public static void handleToken(ArrayList<Token> list, String tokenType, String tokenName, int linePos, int countPos, int progPos) {
         //System.out.println("Use this to DEBUG");
         list.add(new Token(tokenType, tokenName, linePos, countPos, progPos));
