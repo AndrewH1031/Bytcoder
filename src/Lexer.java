@@ -23,6 +23,7 @@ public class Lexer {
         int programCounter = 1; //Counts the number of programs we've lexed through
         int lineCounter = 0;
         int errors = 0; //Number of errors we get when parsing through our strings
+        int warnings = 0; //Number of errors we get when parsing - unlike errors, these won't prevent lexing
         
      
         String stringolon = ""; //char to grab our current soon-to-be token (one at a time) from the file
@@ -33,6 +34,7 @@ public class Lexer {
         boolean inAString = false;
         boolean isLetter = false;
         boolean itsABracket = false;
+        boolean foundEndComment = false;
 
         char symbolon = ' ';
         
@@ -50,6 +52,11 @@ public class Lexer {
                 stringolon = ""; //Resets stringolon every line
                 lineCounter++;
 
+                if(string.isEmpty()) {
+                    System.out.println("WARNING LEXER - WARNING: Nothing Found on Line " + lineCounter);
+                    warnings++;
+                }
+
                 for(int i = 0; i < string.length(); i++) {
                     symbolon = ' '; //Resets symbolon every character
                     stringolon = stringolon + string.charAt(i);
@@ -59,15 +66,43 @@ public class Lexer {
                     //System.out.println(stringolon);
                     //System.out.println(string);
                     
-                    if(inAComment == true) {
-                        if(Pattern.matches(commentEnd, stringolon)) {
-                            //System.out.println("Comments mode deactivated!"); - use this to test
-                            inAComment = false;
+                    //Will print for the current line, working on optimizing this
+                    if(!tokenList.hasNextLine() && string.length() == i + 1) {
+                        if(string.charAt(i) != '$') {
+                            System.out.println("ERROR LEXER - Fatal Error: " + lineCounter + " : " + counter + " Missing Block Statement for Current Program");
+                            errors++;
+                            break;
                         }
-                        //Will update this as soon as I get comments working properly
-                        /*if(string.length() == i + 1) {
+                    }
+
+                    if(inAComment == true) {
+                        if(string.charAt(i) == '*') {
+                            foundEndComment = true;
+                        }
+                        else if(string.charAt(i) == '/') {
+                            if(foundEndComment = true) {
+                                //System.out.println("Comments mode deactivated!"); //- use this to test
+                                inAComment = false;
+                            }
+                        }
+                        if(string.length() == i + 1) {
                             System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Comment Never Closed");
-                        }*/
+                            //Force close the comment
+                            inAComment = false;
+                            errors++;
+                        }
+                    }
+                    else if(inAString == true) {
+                        if((string.charAt(i) == '\"') || (string.charAt(i) == '\'')) {
+                            //System.out.println("String mode deactivated!"); //- use this to test
+                            inAString = false;
+                        }
+                        if(string.length() == i + 1) {
+                            System.out.println("ERROR Lexer - ERROR: String Statement Never Closed");
+                            errors++;
+                            //Force close the string
+                            inAString = false;
+                        }
                     }
                     else {
                     //Switch statement to determine what we should do with our symbol tokens
@@ -81,14 +116,15 @@ public class Lexer {
                             stringolon = "";
                             symbolon = ' ';
                             if(itsABracket == true) {
-                                System.out.println("ERROR Lexer - Bracket Statement Never Closed");
+                                System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Bracket Statement Never Closed");
                                 errors++;
                             }
                             if(errors == 0) {
-                                System.out.println("Lexing completed with " + errors + " errors recorded");
+                                System.out.println("Lexing completed with " + errors + " errors and " + warnings + " warnings recorded");
+                                errors = 0;
                             }
-                            if(errors > 0) {
-                                System.out.println("Lexer failed with " + errors + " errors recorded");
+                            else if(errors > 0) {
+                                System.out.println("Lexer failed with " + errors + " errors and " + warnings + " warnings recorded");
                                 errors = 0;
                             }
                             if(tokenList.hasNextLine()) {
@@ -97,17 +133,10 @@ public class Lexer {
                             }
                         break;
                         case '{':
-                            if(string.length() > 1 && string.length() == i + 1) {
-                                System.out.println("ERROR Lexer - ERROR: Bracket Open Statement At Invalid Position");
-                                errors++;
-                            }
-                            else {
-                                handleToken(list, "OPEN_BLOCK", "{", lineCounter, counter, programCounter);
-                                counter++;
-                                itsABracket = true;
-                                stringolon = "";
-                            }
-                            
+                            handleToken(list, "OPEN_BLOCK", "{", lineCounter, counter, programCounter);
+                            counter++;
+                            itsABracket = true;
+                            stringolon = "";
                         break;
                         case '}':
                             handleToken(list, "CLOSE_BLOCK", "}", lineCounter, counter, programCounter);
@@ -131,16 +160,16 @@ public class Lexer {
                             stringolon = "";
                         break;
                         case '\'':
-                            handleToken(list, "CHAR", "\'", lineCounter, counter, programCounter);
+                            //handleToken(list, "CHAR", "\'", lineCounter, counter, programCounter);
                             counter++;
                             stringolon = "";
-                            //Activate inAString
+                            inAString = true;
                         break;
                         case '\"':
-                            handleToken(list, "CHAR", "\"", lineCounter, counter, programCounter);
+                            //handleToken(list, "CHAR", "\"", lineCounter, counter, programCounter);
                             counter++;
                             stringolon = "";
-                            //Activate inAString
+                            inAString = true;
                         break;
                         case '+':
                             handleToken(list, "INTOP", "+", lineCounter, counter, programCounter);
@@ -220,7 +249,8 @@ public class Lexer {
                         case ' ':
                             //handleToken(list, "SPACE", " ", lineCounter, counter, programCounter);
                             if(string.length() == i + 1) {
-                                System.out.println("WARNING Lexer - WARNING: Whitespace Detected At Invalid Position");
+                                System.out.println("WARNING LEXER - WARNING: " + lineCounter + " : " + counter + " Whitespace Detected at Invalid Position");
+                                errors++;
                             }
                             counter++;
                             stringolon = "";
@@ -284,14 +314,15 @@ public class Lexer {
                             }
                         case "*/":
                             if(inAComment == false) {
-                                System.out.println("ERROR Lexer - ERROR: Comment End Detected Before Start");
+                                System.out.println("WARNING LEXER - WARNING: " + lineCounter + " : " + counter + " Comment End Detected Before Start");
                                 errors++;
                             } 
                         break;
-                        /*default:
+                        default:
                         //Will re-add this after I finish moving things around
-                        System.out.println("ERROR: " + lineCounter + " : " + counter + " - Unrecognized token");
+                        /*System.out.println("ERROR: " + lineCounter + " : " + counter + " - Unrecognized token");
                         errors++;
+                        stringolon = "";
                         break;*/
                         }
                     }
@@ -313,6 +344,6 @@ public class Lexer {
     public static void handleToken(ArrayList<Token> list, String tokenType, String tokenName, int linePos, int countPos, int progPos) {
         //System.out.println("Use this to DEBUG");
         list.add(new Token(tokenType, tokenName, linePos, countPos, progPos));
-        System.out.println("DEBUG LEXER - " + tokenType + " [ " + tokenName + " ]" + "found at position (" + linePos + " : " + countPos + ") - Program " + progPos);
+        System.out.println("DEBUG LEXER - " + tokenType + " [ " + tokenName + " ]" + " found at position (" + linePos + " : " + countPos + ") - Program " + progPos);
     }
 }
