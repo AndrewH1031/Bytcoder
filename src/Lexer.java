@@ -10,23 +10,23 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
-//NOTE: Code is currently able to properly lex project 1 sans letters and some comment rules, will be looking into this
+//NOTE: Code is currently able to properly lex project 1 sans letters, pretty good!
 
 public class Lexer {
 
     public static void main(String src) {
 
         ArrayList<Token> list = new ArrayList<>();
-        File fileList = new File(src);
+        File fileList = new File(src); //This is what allows us to pass our test files to our scanner
 
-        int counter = 1; //Counts our token's position
-        int programCounter = 1; //Counts the number of programs we've lexed through
+        int counter = 1;
+        int programCounter = 1;
         int lineCounter = 0;
-        int errors = 0; //Number of errors we get when parsing through our strings
-        int warnings = 0; //Number of errors we get when parsing - unlike errors, these won't prevent lexing
+        int errors = 0;
+        int warnings = 0;
         
      
-        String stringolon = ""; //char to grab our current soon-to-be token (one at a time) from the file
+        String stringolon = ""; //String to grab our current soon-to-be tokens from the file
         String commentEnd = "\\*/";
         String compareLetters = "[a-zA-Z]";
 
@@ -36,11 +36,9 @@ public class Lexer {
         boolean itsABracket = false;
         boolean foundEndComment = false;
 
-        char symbolon = ' ';
+        char symbolon = ' '; //Character to store the current input in the string, one at a time
         
-
         try {
-        //Basic list stuff to handle our input and token dump
         Scanner tokenList = new Scanner(fileList);
 
             System.out.println();
@@ -66,15 +64,17 @@ public class Lexer {
                     //System.out.println(stringolon);
                     //System.out.println(string);
                     
+                    //If there's no end program symbol found at the end of our file input, throw a FATAL error
                     //Will print for the current line, working on optimizing this
                     if(!tokenList.hasNextLine() && string.length() == i + 1) {
-                        if(string.charAt(i) != '$') {
+                        if(string.charAt(i) != '$') { //Ensures it checks the absolute last character
                             System.out.println("ERROR LEXER - Fatal Error: " + lineCounter + " : " + counter + " Missing Block Statement for Current Program");
                             errors++;
                             break;
                         }
                     }
 
+                    //If we're in a comment, check to see if there's a matching end comment token we can use
                     if(inAComment == true) {
                         if(string.charAt(i) == '*') {
                             foundEndComment = true;
@@ -83,6 +83,7 @@ public class Lexer {
                             if(foundEndComment = true) {
                                 //System.out.println("Comments mode deactivated!"); //- use this to test
                                 inAComment = false;
+                                foundEndComment = false;
                             }
                         }
                         if(string.length() == i + 1) {
@@ -92,6 +93,7 @@ public class Lexer {
                             errors++;
                         }
                     }
+                    //If we're in a string, check to see if there's a matching set of quotes
                     else if(inAString == true) {
                         if((string.charAt(i) == '\"') || (string.charAt(i) == '\'')) {
                             //System.out.println("String mode deactivated!"); //- use this to test
@@ -108,75 +110,88 @@ public class Lexer {
                     //Switch statement to determine what we should do with our symbol tokens
                     //Vaguely follows the grammar order from the project 1 grammar.pdf
                     switch(symbolon) {
+                        //Token to end the current process. This will IMMEDIATELY end the program regardless of what comes after it, clear any indexes and hand it off to the handleToken class
                         case '$':
-                        System.out.println("DEBUG LEXER - EOP [ $ ] found at position (" + lineCounter + " : " + counter + ") - Program " + programCounter);
+                            System.out.println("DEBUG LEXER - EOP [ $ ] found at position (" + lineCounter + " : " + counter + ") - Program " + programCounter);
                             counter = 1;
                             lineCounter = 1;
                             programCounter++;
                             stringolon = "";
                             symbolon = ' ';
+                            //If we've got an open bracket when the program is terminated, print an error
                             if(itsABracket == true) {
                                 System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Bracket Statement Never Closed");
                                 errors++;
                             }
+                            //If we have no errors, great! Print a message saying we're done
                             if(errors == 0) {
                                 System.out.println("Lexing completed with " + errors + " errors and " + warnings + " warnings recorded");
                                 errors = 0;
                             }
+                            //If we have errors, we want to show how many we have, as well as point out that our lexer has failed
                             else if(errors > 0) {
                                 System.out.println("Lexer failed with " + errors + " errors and " + warnings + " warnings recorded");
                                 errors = 0;
                             }
+                            //If there's still lines in the input file (i.e. there's still programs to lex through), print a message saying so
                             if(tokenList.hasNextLine()) {
                                 System.out.println();
                                 System.out.println("Lexing program " + programCounter + "...");
                             }
                         break;
+                        //Open bracket token
                         case '{':
                             handleToken(list, "OPEN_BLOCK", "{", lineCounter, counter, programCounter);
                             counter++;
                             itsABracket = true;
                             stringolon = "";
                         break;
+                        //Close bracket token
                         case '}':
                             handleToken(list, "CLOSE_BLOCK", "}", lineCounter, counter, programCounter);
                             counter++;
                             itsABracket = false;
                             stringolon = "";
                         break;
+                        //Open parentheses token
                         case '(':
                             handleToken(list, "OPEN_PAREN", "(", lineCounter, counter, programCounter);
                             counter++;
                             stringolon = "";
                         break;
+                        //Close parentheses token
                         case ')':
                             handleToken(list, "CLOSE_BLOCK", ")", lineCounter, counter, programCounter);
                             counter++;
                             stringolon = "";
                         break;
+                        //Assignment token
                         case '=':
                             handleToken(list, "ASSIGNOP", "=", lineCounter, counter, programCounter);
                             counter++;
                             stringolon = "";
                         break;
+                        //Open quotes indicator
                         case '\'':
                             //handleToken(list, "CHAR", "\'", lineCounter, counter, programCounter);
                             counter++;
                             stringolon = "";
                             inAString = true;
                         break;
+                        //Open quotes indicator
                         case '\"':
                             //handleToken(list, "CHAR", "\"", lineCounter, counter, programCounter);
                             counter++;
                             stringolon = "";
                             inAString = true;
                         break;
+                        //IntoOp token
                         case '+':
                             handleToken(list, "INTOP", "+", lineCounter, counter, programCounter);
                             counter++;
                             stringolon = "";
                         break;
-                        case '0': //testing
+                        case '0': //Numbers tokens, I'll probably think of a better way to detect these than stuffing them here
                             if(Character.isDigit(string.charAt(i))) {
                                 handleToken(list, "NUM", "0", lineCounter, counter, programCounter);
                             }
@@ -246,6 +261,8 @@ public class Lexer {
                             counter++;
                             stringolon = "";
                         break;
+                        //Space token
+                        //We DO NOT want to tokenize this yet, it will cause too much noise in the lexer
                         case ' ':
                             //handleToken(list, "SPACE", " ", lineCounter, counter, programCounter);
                             if(string.length() == i + 1) {
@@ -259,59 +276,70 @@ public class Lexer {
                     }
                     //Switch statement to handle our string inputs
                     switch(stringolon) {
+                        //String expression token
                         case "string":
                             handleToken(list, "TYPE", "string", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
+                        //Int expression token
                         case "int":
                             handleToken(list, "TYPE", "int", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
+                        //Print expression token
                         case "print":
                             handleToken(list, "PRINTSTATEMENT", "print", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
+                        //ID expression token
                         case "ID":
                             handleToken(list, "ID", "id", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
+                        //While expression token
                         case "while":
                             handleToken(list, "WHILESTATEMENT", "while", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
+                        //If expression token
                         case "if":
                             handleToken(list, "IFSTATEMENT", "if", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
+                        //Boolean expression token
                         case "boolean":
                             handleToken(list, "TYPE", "bool", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
+                        //Boolean value token
                         case "true":
                             handleToken(list, "BOOLVAL", "true", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
+                        //Boolean value token
                         case "false":
                             handleToken(list, "BOOLVAL", "false", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
+                        //Boolean equals operand token
+                        //Currently overshadowed by its little brother =, but I'm working on a fix
                         case "==":
                             handleToken(list, "BOOLOP", "==", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
+                        //Boolean does not equal operand token
+                        //Also doesn't work. Again, still working on it.
                         case "!=":
                             handleToken(list, "BOOLOP", "!=", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
-                        case " ":
-                            //don't tokenize this
-                            stringolon = "";
-                        break;
+                        //Beginning string token
                         case "/*":
                             if(inAComment == false) {
                                 //System.out.println("COMMENTS MODE ACTIVATED!!!"); - use this to test
                                 inAComment = true;
                             }
+                        //Ending string token
                         case "*/":
                             if(inAComment == false) {
                                 System.out.println("WARNING LEXER - WARNING: " + lineCounter + " : " + counter + " Comment End Detected Before Start");
@@ -328,10 +356,10 @@ public class Lexer {
                     }
                 }
             }
-        tokenList.close(); 
+        tokenList.close();
         }
     
-        //Not entirely sure I even need this but I"m too scared to take it out
+        //Backup catch statement in case our file didn't show up, which should ideally be never
         catch (Exception noFile) {
             noFile.printStackTrace();
         }
