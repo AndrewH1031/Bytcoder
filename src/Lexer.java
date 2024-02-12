@@ -32,6 +32,7 @@ public class Lexer {
         boolean inAComment = false;
         boolean inAString = false;
         boolean isLetter = false;
+        boolean itsABracket = false;
 
         char symbolon = ' ';
         
@@ -42,18 +43,16 @@ public class Lexer {
 
             System.out.println();
             System.out.println("Lexing program " + programCounter + "...");
-            while (tokenList.hasNextLine()) {
+            while(tokenList.hasNextLine()) {
                 //System.out.println("IOU one lexer");
                 String string = tokenList.nextLine();
                 //System.out.println(string.length());
                 stringolon = ""; //Resets stringolon every line
                 lineCounter++;
 
-                for (int i = 0; i < string.length(); i++) {
+                for(int i = 0; i < string.length(); i++) {
                     symbolon = ' '; //Resets symbolon every character
                     stringolon = stringolon + string.charAt(i);
-
-                    //Works much better than combing our string for symbols
                     symbolon = string.charAt(i);
                     
                     //System.out.println(symbolon);
@@ -65,6 +64,10 @@ public class Lexer {
                             //System.out.println("Comments mode deactivated!"); - use this to test
                             inAComment = false;
                         }
+                        //Will update this as soon as I get comments working properly
+                        /*if(string.length() == i + 1) {
+                            System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Comment Never Closed");
+                        }*/
                     }
                     else {
                     //Switch statement to determine what we should do with our symbol tokens
@@ -77,11 +80,16 @@ public class Lexer {
                             programCounter++;
                             stringolon = "";
                             symbolon = ' ';
+                            if(itsABracket == true) {
+                                System.out.println("ERROR Lexer - Bracket Statement Never Closed");
+                                errors++;
+                            }
                             if(errors == 0) {
-                                System.out.println("Lexing completed with " + errors + " errors recorded.");
+                                System.out.println("Lexing completed with " + errors + " errors recorded");
                             }
                             if(errors > 0) {
                                 System.out.println("Lexer failed with " + errors + " errors recorded");
+                                errors = 0;
                             }
                             if(tokenList.hasNextLine()) {
                                 System.out.println();
@@ -89,16 +97,22 @@ public class Lexer {
                             }
                         break;
                         case '{':
-                            /*list.add(new Token("OPEN_BLOCK", "{", lineCounter, counter, programCounter));
-                            System.out.println("DEBUG LEXER - OPEN_BLOCK [ { ] found at position (" + lineCounter + " : " + counter + ") - Program " +  programCounter );
-                            counter++;*/
-                            handleToken(list, "OPEN_BLOCK", "{", lineCounter, counter, programCounter);
-                            counter++;
-                            stringolon = "";
+                            if(string.length() > 1 && string.length() == i + 1) {
+                                System.out.println("ERROR Lexer - ERROR: Bracket Open Statement At Invalid Position");
+                                errors++;
+                            }
+                            else {
+                                handleToken(list, "OPEN_BLOCK", "{", lineCounter, counter, programCounter);
+                                counter++;
+                                itsABracket = true;
+                                stringolon = "";
+                            }
+                            
                         break;
                         case '}':
                             handleToken(list, "CLOSE_BLOCK", "}", lineCounter, counter, programCounter);
                             counter++;
+                            itsABracket = false;
                             stringolon = "";
                         break;
                         case '(':
@@ -120,11 +134,13 @@ public class Lexer {
                             handleToken(list, "CHAR", "\'", lineCounter, counter, programCounter);
                             counter++;
                             stringolon = "";
+                            //Activate inAString
                         break;
                         case '\"':
                             handleToken(list, "CHAR", "\"", lineCounter, counter, programCounter);
                             counter++;
                             stringolon = "";
+                            //Activate inAString
                         break;
                         case '+':
                             handleToken(list, "INTOP", "+", lineCounter, counter, programCounter);
@@ -203,12 +219,15 @@ public class Lexer {
                         break;
                         case ' ':
                             //handleToken(list, "SPACE", " ", lineCounter, counter, programCounter);
+                            if(string.length() == i + 1) {
+                                System.out.println("WARNING Lexer - WARNING: Whitespace Detected At Invalid Position");
+                            }
                             counter++;
                             stringolon = "";
                         break;
                         
                     }
-                    //New switch statement to handle our string inputs
+                    //Switch statement to handle our string inputs
                     switch(stringolon) {
                         case "string":
                             handleToken(list, "TYPE", "string", lineCounter, counter, programCounter);
@@ -255,7 +274,7 @@ public class Lexer {
                             stringolon = "";
                         break;
                         case " ":
-                            //don't tokenize this, it's useless
+                            //don't tokenize this
                             stringolon = "";
                         break;
                         case "/*":
@@ -265,32 +284,27 @@ public class Lexer {
                             }
                         case "*/":
                             if(inAComment == false) {
-                                System.out.println("ERROR Lexer - ERROR: you can't stop comments you haven't started yet.");
+                                System.out.println("ERROR Lexer - ERROR: Comment End Detected Before Start");
                                 errors++;
-                            }
-                            //This else statement should literally never be satisfied because the inAComment loop at the beginning should always catch it
-                            else {
-                                //System.out.println("how did we get here?!?!?");
-                            }
+                            } 
                         break;
                         /*default:
                         //Will re-add this after I finish moving things around
-                            System.out.println("ERROR: " + lineCounter + " : " + counter + " - Unrecognized token");
-                            errors++;
-                            break;*/
-
+                        System.out.println("ERROR: " + lineCounter + " : " + counter + " - Unrecognized token");
+                        errors++;
+                        break;*/
+                        }
                     }
                 }
-                }
             }
-    tokenList.close(); 
-    }
+        tokenList.close(); 
+        }
     
-    //Not entirely sure I even need this but I"m too scared to take it out
-    catch (Exception noFile) {
-        noFile.printStackTrace();
+        //Not entirely sure I even need this but I"m too scared to take it out
+        catch (Exception noFile) {
+            noFile.printStackTrace();
+        }
     }
-  }
 
     public static void handleLetters(ArrayList<Token> list, String tokenType, String tokenName, int linePos, int countPos, int progPos) {
         //pass to handletoken class
