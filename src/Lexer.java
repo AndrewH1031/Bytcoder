@@ -10,7 +10,7 @@ import java.io.FileNotFoundException; //Import for catch string at the end of th
 import java.util.ArrayList;
 import java.util.regex.Pattern; //Import to match our letters/digits with a matcher tool
 
-//NOTE: Code is currently able to properly lex project 1 sans letters, pretty good!
+//NOTE: Code is currently able to properly lex project 1 sans some letters, pretty good!
 
 public class Lexer {
 
@@ -29,8 +29,8 @@ public class Lexer {
 
         //Not too sure what these do, I think I had them set up for something with letter matching...
         //In any case, I'll let them stay here for now, I might need them later on
-        String commentEnd = "\\*/";
-        String compareLetters = "[a-zA-Z]";
+        String invalidToken = "[\s]";
+        String compareLetters = "[a-zA-Z]+";
 
         boolean inAComment = false; //Determines if we're currently in a comment
         boolean inAString = false; //Determines if we're currently in a string
@@ -38,6 +38,7 @@ public class Lexer {
         boolean foundEndComment = false; //Determines if we've got the second half of the end comment token "*/"
 
         char symbolon = ' '; //Character to store the current input in the string, one at a time
+        char forward = ' ';
         
         //Try statement, we NEED this for our file input to work
         try {
@@ -64,6 +65,10 @@ public class Lexer {
                     symbolon = ' '; //Resets symbolon every character
                     stringolon = stringolon + string.charAt(i);
                     symbolon = string.charAt(i);
+
+                    if(string.length()-1 > i + 1) {
+                        forward = string.charAt(i+1);
+                    }
                     
                     //System.out.println(symbolon);
                     //System.out.println(stringolon);
@@ -100,12 +105,12 @@ public class Lexer {
                             break;
                         }
                         //If we're at the end of the line and we still haven't gotten the second half, print an error
-                        if(string.length() == i + 1) {
-                            System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Comment Never Closed");
+                        /*if(string.length() == i + 1) {
+                            System.out.println("WARNING LEXER - WARNING: " + lineCounter + " : " + counter + " Comment Never Closed; Process Auto-Closed Comment Statement");
                             //Force close the comment
                             inAComment = false;
-                            errors++;
-                        }
+                            warnings++;
+                        }*/
                     }
                     //If we're in a string, check to see if there's a matching set of quotes
                     else if(inAString == true) {
@@ -113,13 +118,28 @@ public class Lexer {
                             //System.out.println("String mode deactivated!"); //- use this to test
                             inAString = false;
                         }
+
+                        if((stringolon.matches(("[a-z\\s'\"]+")))) {
+                            if(symbolon == ' ') {
+                                //Do nothing, we want to process whitespace for now
+                            }
+                            else {
+                                handleToken(list, "ID", (string.charAt(i) + ""), lineCounter, counter, programCounter);
+                            }
+                        }
+                        else {
+                            System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Invalid Character Type Included In String");
+                            errors++;
+                        }
                         //Much like inAComment, if we're at the end of our current line and we don't have our quote pair token, print an error
                         if(string.length() == i + 1) {
-                            System.out.println("ERROR Lexer - ERROR: String Statement Never Closed");
-                            errors++;
+                            System.out.println("WARNING LEXER - Warning: " + lineCounter + " : " + counter + " Comment Never Closed; Process Auto-Closed String Statement");
+                            warnings++;
                             //Force close the string
                             inAString = false;
                         }
+                        stringolon = "";
+                        counter++;
                     }
                     else {
                     //Switch statement to determine what we should do with our symbol tokens
@@ -127,7 +147,7 @@ public class Lexer {
                     switch(symbolon) {
                         //Token to end the current process. This will IMMEDIATELY end the program regardless of what comes after it, clear any indexes and hand it off to the handleToken class
                         case '$':
-                            System.out.println("DEBUG LEXER - EOP [ $ ] found at position (" + lineCounter + " : " + counter + ") - Program " + programCounter);
+                            handleToken(list, "EOP_BLOCK", "$", lineCounter, counter, programCounter);
                             counter = 1;
                             lineCounter = 1;
                             programCounter++;
@@ -137,11 +157,13 @@ public class Lexer {
                             if(itsABracket == true) {
                                 System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Bracket Statement Never Closed");
                                 errors++;
+                                warnings = 0;
                             }
                             //If we have no errors, great! Print a message saying we're done
                             if(errors == 0) {
                                 System.out.println("Lexing completed with " + errors + " errors and " + warnings + " warnings recorded");
                                 errors = 0;
+                                warnings = 0;
                             }
                             //If we have errors, we want to show how many we have, as well as point out that our lexer has failed
                             else if(errors > 0) {
@@ -364,10 +386,23 @@ public class Lexer {
                         case "*/":
                             if(inAComment == false) {
                                 System.out.println("WARNING LEXER - WARNING: " + lineCounter + " : " + counter + " Comment End Detected Before Start");
-                                errors++;
+                                warnings++;
                             } 
                         break;
-                        default:
+                        /*default:
+                        if(stringolon.matches(compareLetters)) {
+                            System.out.println("yay!");
+                            stringolon = "";
+                        }
+                        else if(stringolon.matches(invalidToken)) {
+                            //Do nothing
+                        }
+                        else {
+                            System.out.println("ERROR: " + lineCounter + " : " + counter + " - Unrecognized token");
+                            errors++;
+                            stringolon = "";
+                        }
+                        break;*/
                         //Will re-add this after I finish moving things around
                         /*System.out.println("ERROR: " + lineCounter + " : " + counter + " - Unrecognized token");
                         errors++;
