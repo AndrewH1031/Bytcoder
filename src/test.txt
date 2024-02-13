@@ -1,0 +1,10 @@
+{
+    int a
+    a = a
+    string b
+    a = b
+    print
+}$
+{}{}}}{}{{{}}}$
+(( ' look /* out */ world, its me! ' */ $
+/* looooooong comment 23 */
