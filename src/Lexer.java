@@ -36,9 +36,11 @@ public class Lexer {
         boolean inAString = false; //Determines if we're currently in a string
         boolean itsABracket = false; //Determines if we're in an open bracket statement
         boolean foundEndComment = false; //Determines if we've got the second half of the end comment token "*/"
+        boolean donttouchtheEquals = false; //Used for Boolean != and == statements to conveniently omit the second = after we've already initialized it
 
         char symbolon = ' '; //Character to store the current input in the string, one at a time
         char forward = ' ';
+        char forwarder = ' ';
         
         //Try statement, we NEED this for our file input to work
         try {
@@ -50,7 +52,6 @@ public class Lexer {
             while(tokenList.hasNextLine()) {
                 //System.out.println(string.length());
 
-                //
                 String string = tokenList.nextLine();
 
                 stringolon = ""; //Resets stringolon every line
@@ -88,7 +89,7 @@ public class Lexer {
 
                     //If we're in a comment, check to see if there's a matching end comment token we can use
                     if(inAComment == true) {
-                        
+                        counter++;
                         switch(symbolon) {
                             //We've got one half of the token we want
                             case '*':
@@ -104,13 +105,7 @@ public class Lexer {
                                 }
                             break;
                         }
-                        //If we're at the end of the line and we still haven't gotten the second half, print an error
-                        /*if(string.length() == i + 1) {
-                            System.out.println("WARNING LEXER - WARNING: " + lineCounter + " : " + counter + " Comment Never Closed; Process Auto-Closed Comment Statement");
-                            //Force close the comment
-                            inAComment = false;
-                            warnings++;
-                        }*/
+                        //Don't throw a comment end error since comments should wrap around
                     }
                     //If we're in a string, check to see if there's a matching set of quotes
                     else if(inAString == true) {
@@ -133,7 +128,7 @@ public class Lexer {
                         }
                         //Much like inAComment, if we're at the end of our current line and we don't have our quote pair token, print an error
                         if(string.length() == i + 1) {
-                            System.out.println("WARNING LEXER - Warning: " + lineCounter + " : " + counter + " Comment Never Closed; Process Auto-Closed String Statement");
+                            System.out.println("WARNING LEXER - Warning: " + lineCounter + " : " + counter + " String Never Closed; Process Auto-Closed String Statement");
                             warnings++;
                             //Force close the string
                             inAString = false;
@@ -150,9 +145,9 @@ public class Lexer {
                             handleToken(list, "EOP_BLOCK", "$", lineCounter, counter, programCounter);
                             counter = 1;
                             lineCounter = 1;
-                            programCounter++;
                             stringolon = "";
                             symbolon = ' ';
+                            programCounter++;
                             //If we've got an open bracket when the program is terminated, print an error
                             if(itsABracket == true) {
                                 System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Bracket Statement Never Closed");
@@ -178,22 +173,23 @@ public class Lexer {
                         break;
                         //Open bracket token
                         case '{':
+                        //Basic steps to the lexer processing:
                             //Passes token to the handleToken class for processing
                             handleToken(list, "OPEN_BLOCK", "{", lineCounter, counter, programCounter);
                             //Increments the counter
                             counter++;
-                            //
+                            //Sets itsABracket to true, indicating we're currently in a bracket statement
                             itsABracket = true;
+                            //Resets stringolon
                             stringolon = "";
                         break;
                         //Close bracket token
                         case '}':
                             handleToken(list, "CLOSE_BLOCK", "}", lineCounter, counter, programCounter);
                             counter++;
-                            //Error here for close bracket before open
                             itsABracket = false;
                             stringolon = "";
-                        break;
+                            break;
                         //Open parentheses token
                         case '(':
                             handleToken(list, "OPEN_PAREN", "(", lineCounter, counter, programCounter);
@@ -209,9 +205,22 @@ public class Lexer {
                         break;
                         //Assignment token
                         case '=':
-                            handleToken(list, "ASSIGNOP", "=", lineCounter, counter, programCounter);
+                            if(donttouchtheEquals == true) {
+                                System.out.println("nope!");
+                                donttouchtheEquals = false;
+                                stringolon = "";
+                            }
+                            else if (forward == '=') {
+                                handleToken(list, "BOOLOP", "==", lineCounter, counter, programCounter);
+                                donttouchtheEquals = true;
+                            }
+                            else {
+                                handleToken(list, "ASSIGNOP", "=", lineCounter, counter, programCounter);
+                                counter++;
+                                stringolon = "";
+                                donttouchtheEquals = false;
+                            }
                             counter++;
-                            stringolon = "";
                         break;
                         //Open quotes indicator
                         case '\'':
@@ -303,6 +312,19 @@ public class Lexer {
                             counter++;
                             stringolon = "";
                         break;
+                        case '!':
+                            //If we've got a BoolOp statement lined up, we can see the upcoming = symbol with our forward pointer
+                            if(forward == '=') {
+                                handleToken(list, "BOOLOP", "!=", lineCounter, counter, programCounter);
+                                stringolon = "";
+                                donttouchtheEquals = true;
+                            }
+                            //Otherwise, we're not meant to encounter this by itself, so we print an error
+                            else {
+                                System.out.println("ERROR LEXER - ERROR:" + lineCounter + " : " + counter + " Invalid Character \"!\" Detected Outside of BoolOp Statement");
+                                errors++;
+                                stringolon = "";
+                            }
                         //Space token
                         //We DO NOT want to tokenize this yet, it will cause too much noise in the lexer
                         case ' ':
@@ -333,11 +355,6 @@ public class Lexer {
                             handleToken(list, "PRINTSTATEMENT", "print", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
-                        //ID expression token
-                        case "ID":
-                            handleToken(list, "ID", "id", lineCounter, counter, programCounter);
-                            stringolon = "";
-                        break;
                         //While expression token
                         case "while":
                             handleToken(list, "WHILESTATEMENT", "while", lineCounter, counter, programCounter);
@@ -363,19 +380,6 @@ public class Lexer {
                             handleToken(list, "BOOLVAL", "false", lineCounter, counter, programCounter);
                             stringolon = "";
                         break;
-                        //Boolean equals operand token
-                        //Currently overshadowed by its little brother =, but I'm working on a fix
-                        case "==":
-                            handleToken(list, "BOOLOP", "==", lineCounter, counter, programCounter);
-                            stringolon = "";
-                        break;
-                        //Boolean does not equal operand token
-                        //Also doesn't work. Again, still working on it.
-                        case "!=":
-                            handleToken(list, "BOOLOP", "!=", lineCounter, counter, programCounter);
-                            stringolon = "";
-                        break;
-                        //Beginning string token
                         case "/*":
                             if(inAComment == false) {
                                 //System.out.println("COMMENTS MODE ACTIVATED!!!"); - use this to test
@@ -389,25 +393,6 @@ public class Lexer {
                                 warnings++;
                             } 
                         break;
-                        /*default:
-                        if(stringolon.matches(compareLetters)) {
-                            System.out.println("yay!");
-                            stringolon = "";
-                        }
-                        else if(stringolon.matches(invalidToken)) {
-                            //Do nothing
-                        }
-                        else {
-                            System.out.println("ERROR: " + lineCounter + " : " + counter + " - Unrecognized token");
-                            errors++;
-                            stringolon = "";
-                        }
-                        break;*/
-                        //Will re-add this after I finish moving things around
-                        /*System.out.println("ERROR: " + lineCounter + " : " + counter + " - Unrecognized token");
-                        errors++;
-                        stringolon = "";
-                        break;*/
                         }
                     }
                 }
@@ -420,11 +405,6 @@ public class Lexer {
         catch (Exception noFile) {
             noFile.printStackTrace();
         }
-    }
-
-    //This does nothing, for now....
-    public static void handleLetters(ArrayList<Token> list, String tokenType, String tokenName, int linePos, int countPos, int progPos) {
-        //pass to handletoken class
     }
 
     //handleToken array, which will neatly tokenize and print whatever token is passed to it
