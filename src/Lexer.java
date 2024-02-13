@@ -420,7 +420,8 @@ public class Lexer {
                                 counter++;
                             }
                         default:
-                            if((symbolon == '@') || (symbolon == '>') || (symbolon == '<') || (symbolon == '|') || (symbolon == '[') || (symbolon == ']') || (symbolon == '%')) {
+                            //Errors to encompass invalid tokens, which we will not be including in our grammar
+                            if((symbolon == '@') || (symbolon == '>') || (symbolon == '<') || (symbolon == '|') || (symbolon == '[') || (symbolon == ']') || (symbolon == '%') || (symbolon == '.') || (symbolon == '&') || (symbolon == '#') || (symbolon == '?')) {
                                 System.out.println("ERROR LEXER - ERROR:" + lineCounter + " : " + counter + " Unrecognized Token");
                                 errors++;
                                 stringolon = "";
