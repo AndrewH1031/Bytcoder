@@ -1,5 +1,3 @@
-//package src;
-
 //A very generous thank you to the folks at:
 //      https://stackoverflow.com/questions/13185727/reading-a-txt-file-using-scanner-class-in-java
 //for teaching me how to read text from a file input, because I am not a perfect human being
@@ -123,6 +121,7 @@ public class Lexer {
                                 counter++;
                             }
                             else {
+                                //Consider every valid token in a string as a lowercase letter and handle it
                                 handleToken(list, "ID", (string.charAt(i) + ""), lineCounter, counter, programCounter);
                                 counter++;
                             }
@@ -153,7 +152,6 @@ public class Lexer {
                             case '$':
                                 handleToken(list, "EOP_BLOCK", "$", lineCounter, counter, programCounter);
                                 counter = 1;
-                                lineCounter = 1;
                                 stringolon = "";
                                 symbolon = ' ';
                                 programCounter++;
@@ -210,7 +208,6 @@ public class Lexer {
                                 handleToken(list, "CLOSE_BLOCK", ")", lineCounter, counter, programCounter);
                                 counter++;
                                 stringolon = "";
-                                //Error here for close paren before open
                             break;
                             //Assignment token
                             case '=':
@@ -218,11 +215,18 @@ public class Lexer {
                                     donttouchtheEquals = false;
                                     stringolon = "";
                                     counter++;
+                                    if(forward == '=') {
+                                        System.out.println("WARNING LEXER - Warning: " + lineCounter + " : " + counter + " BoolOp Statement Out of Bounds");
+                                        warnings++;
+                                        donttouchtheEquals = true;
+                                        counter++;
+                                    }
                                 }
-                                else if (forward == '=') {
+                                else if(forward == '=') {
                                     handleToken(list, "BOOLOP", "==", lineCounter, counter, programCounter);
-                                    donttouchtheEquals = true;
                                     counter++;
+                                    stringolon = "";
+                                    donttouchtheEquals = true;
                                 }
                                 else {
                                     handleToken(list, "ASSIGNOP", "=", lineCounter, counter, programCounter);
@@ -416,14 +420,14 @@ public class Lexer {
                                 counter++;
                             }
                         default:
-                            if((symbolon == '@') || (symbolon == '>') || (symbolon == '<') || (symbolon == '|') || (symbolon == '[') || (symbolon == ']')) {
+                            if((symbolon == '@') || (symbolon == '>') || (symbolon == '<') || (symbolon == '|') || (symbolon == '[') || (symbolon == ']') || (symbolon == '%')) {
                                 System.out.println("ERROR LEXER - ERROR:" + lineCounter + " : " + counter + " Unrecognized Token");
                                 errors++;
                                 stringolon = "";
                                 counter++;
                             }
                         }
-                        //Function to compare our individual letters. It's currently a bit wonky and will 
+                        //Function to compare our individual letters. It's currently a bit wonky.
                         if(Pattern.matches(compareLetters, stringolon)) {
                             //System.out.println(counter);
                             //System.out.println(string.length());
