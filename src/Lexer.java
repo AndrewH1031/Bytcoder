@@ -29,7 +29,7 @@ public class Lexer {
         
         String stringolon = ""; //String to grab our current soon-to-be token from the file
 
-        String compareLetters = "(?:^|\s)([a-zA-Z0-9])(?=\s|$)"; //String to compare our valid ID tokens
+        String compareLetters = "(?:^|\s)([a-zA-Z])(?=\s|$)"; //String to compare our valid ID tokens
 
         boolean inAComment = false; //Determines if we're currently in a comment
         boolean inAString = false; //Determines if we're currently in a string
@@ -423,9 +423,10 @@ public class Lexer {
                                 counter++;
                             }
                         }
+                        //Function to compare our individual letters. It's currently a bit wonky and will 
                         if(Pattern.matches(compareLetters, stringolon)) {
-                            System.out.println(counter);
-                            System.out.println(string.length());
+                            //System.out.println(counter);
+                            //System.out.println(string.length());
                             System.out.println("DEBUG LEXER - ID [ " + string.charAt(i) + " ]" + " found at position (" + lineCounter + " : " + counter + ") - Program " + programCounter);
                             counter++;
                             //WORK ON THIS
