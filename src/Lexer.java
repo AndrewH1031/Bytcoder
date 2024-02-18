@@ -27,7 +27,8 @@ public class Lexer {
         
         String stringolon = ""; //String to grab our current soon-to-be token from the file
 
-        String compareLetters = "(?:^|\s)([a-zA-Z])(?=\s|$)"; //String to compare our valid ID tokens
+        String compareLetters = "[a-zA-Z]"; //String to compare our valid ID tokens
+        String[] keyword = {"int", "string", "print", "while", "id", "for", "boolean", "true", "false", "if"};
 
         boolean inAComment = false; //Determines if we're currently in a comment
         boolean inAString = false; //Determines if we're currently in a string
@@ -144,7 +145,6 @@ public class Lexer {
                     }
 
                     else {
-
                         //Switch statement to determine what we should do with our symbol tokens
                         //Vaguely follows the grammar order from the project 1 grammar.pdf
                         switch(symbolon) {
@@ -216,6 +216,7 @@ public class Lexer {
                                     stringolon = "";
                                     counter++;
                                     if(forward == '=') {
+                                        //If we have more than one boolean operand statement in a row (i.e. something like !===), then we want to print a warning saying so
                                         System.out.println("WARNING LEXER - Warning: " + lineCounter + " : " + counter + " BoolOp Statement Out of Bounds");
                                         warnings++;
                                         donttouchtheEquals = true;
@@ -331,6 +332,7 @@ public class Lexer {
                                 if(forward == '=') {
                                     handleToken(list, "BOOLOP", "!=", lineCounter, counter, programCounter);
                                     stringolon = "";
+                                    //Sets a boolean value for the program to decide what happens to the upcoming = symbol
                                     donttouchtheEquals = true;
                                     counter++;
                                 }
@@ -347,6 +349,7 @@ public class Lexer {
                             case ' ':
                                 //handleToken(list, "SPACE", " ", lineCounter, counter, programCounter);
                                 if(string.length() == i + 1) {
+                                    //If there's some whitespace left over at the end of the current string (or the current string is nothing but whitespace), then throw a warning
                                     System.out.println("WARNING LEXER - WARNING: " + lineCounter + " : " + counter + " Whitespace Detected at Invalid Position");
                                     errors++;
                                 }
@@ -356,7 +359,7 @@ public class Lexer {
 
                     }
                     //Switch statement to handle our string inputs
-                    switch(stringolon) {
+                    /*switch(stringolon) {
                         //String expression token
                         case "string":
                             handleToken(list, "TYPE", "string", lineCounter, counter, programCounter);
@@ -367,7 +370,7 @@ public class Lexer {
                         case "int":
                             handleToken(list, "TYPE", "int", lineCounter, counter, programCounter);
                             stringolon = "";
-                            counter++;
+                            counter = counter + 3;
                         break;
                         //Print expression token
                         case "print":
@@ -379,7 +382,7 @@ public class Lexer {
                         case "while":
                             handleToken(list, "WHILESTATEMENT", "while", lineCounter, counter, programCounter);
                             stringolon = "";
-                            counter++;
+                            counter = counter + 4;
                         break;
                         //If expression token
                         case "if":
@@ -413,8 +416,9 @@ public class Lexer {
                             }
                         //Token to NOT end our comment string - this part is handled by our inAComment function!
                         //Instead prints an error, since there's no way to get here if you formatted everything correctly
-                        case "*/":
+                        case "":
                             if(inAComment == false) {
+                                //Print a warning if we get a *//*, since we obviously don't want to end comments we haven't even opened yet
                                 System.out.println("WARNING LEXER - WARNING: " + lineCounter + " : " + counter + " Comment End Detected Before Start");
                                 warnings++;
                                 counter++;
@@ -427,17 +431,54 @@ public class Lexer {
                                 stringolon = "";
                                 counter++;
                             }
-                        }
+                        }*/
                         //Function to compare our individual letters. It's currently a bit wonky.
                         if(Pattern.matches(compareLetters, stringolon)) {
-                            //System.out.println(counter);
-                            //System.out.println(string.length());
-                            System.out.println("DEBUG LEXER - ID [ " + string.charAt(i) + " ]" + " found at position (" + lineCounter + " : " + counter + ") - Program " + programCounter);
-                            counter++;
-                            //WORK ON THIS
-                            //move end pointer so long as it's not touching a space or non-character
-                            //once endpointer is stuck, iterate to it and try and match the regex
-                        }
+                            //TESTING PURPOSES
+                            int startPointer = i; //might not need this
+                            int endPointer = i + 1;
+                            int mainpart = 0;
+                            String longestMatch = null;
+
+                            while(endPointer <= string.length()) {
+                                //System.out.println("I'm in the mainframe pt." + mainpart);
+                                String substring = string.substring(startPointer, endPointer);
+                                System.out.println(substring);
+                                //System.out.println(longestMatch);
+
+                                //while the next token is a letter (NOT a symbol or whitespace):
+                                //If substring matches from i to endpointer, add keyword token and increment i
+                                if(Pattern.matches("while", substring) || Pattern.matches("int", substring) || Pattern.matches("print", substring)) {
+                                    if(Pattern.matches("int", substring)) {
+                                        System.out.println("int!!");
+                                        i = i + 2;
+                                        longestMatch = substring;
+                                    }
+                                    else if(Pattern.matches("while", substring)) {
+                                        System.out.println("while!");
+                                        i = i + 4;
+                                        longestMatch = substring;
+                                    }
+                                    if(Pattern.matches("print", substring)) {
+                                        System.out.println("print!");
+                                        i = i + 4;
+                                        longestMatch = substring;
+                                    }
+                                    System.out.println(longestMatch);
+                                }
+                                
+                                endPointer++;
+                                mainpart++;
+                            }
+                            if(longestMatch == null) {
+                                System.out.println("individual token found");
+                            }
+
+                            //this will print out regardless of comments, but that's okay because we don't have anything to check for comments yet
+                            //System.out.println(startPointer);
+                            //System.out.println(endPointer);
+                            stringolon = "";
+                        } 
                     }
                 }
             }
