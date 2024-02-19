@@ -5,8 +5,8 @@
 import java.util.Scanner;
 import java.io.File; //Import to take file input
 import java.io.FileNotFoundException; //Import for catch string at the end of the class
-import java.util.ArrayList;
-import java.util.regex.Pattern; //Import to match our letters/digits with a matcher tool
+import java.util.ArrayList; //Import to initialize our token array list, which we'll use to store the stuff we find
+import java.util.regex.Pattern; //Import to match our letters with a matcher tool
 
 public class Lexer {
 
@@ -23,7 +23,7 @@ public class Lexer {
         
         String stringolon = ""; //String to grab our current soon-to-be token from the file - WE MAY NOT NEED THIS IN THE FUTURE
 
-        String compareLetters = "[a-zA-Z]"; //String to compare our valid ID tokens
+        String compareLetters = "[a-zA-Z]"; //String to compare our valid keyword/statement/boolean/ID tokens
 
         boolean inAComment = false; //Determines if we're currently in a comment
         boolean inAString = false; //Determines if we're currently in a string
@@ -31,8 +31,8 @@ public class Lexer {
         boolean foundEndComment = false; //Determines if we've got the second half of the end comment token "*/"
         boolean donttouchtheEquals = false; //Used for Boolean != and == statements to conveniently omit the second = after we've already initialized it
 
-        char symbolon = ' '; //Character to store the current input in the string, one at a time
-        char forward = ' ';
+        char symbolon = ' '; //Character to grab the current input in the string, one at a time
+        char forward = ' '; //Character to check ahead one spot in our string for things such as boolean operands and comment endings
         
         //Try statement, we NEED this for our file input to work
         try {
@@ -54,6 +54,7 @@ public class Lexer {
                     warnings++;
                 }
 
+                //Iterates through the entirety of our current string
                 for(int i = 0; i < string.length(); i++) {
                     symbolon = ' '; //Resets symbolon every character
                     stringolon = stringolon + string.charAt(i);
@@ -111,6 +112,7 @@ public class Lexer {
                             counter++;
                         }
 
+                        //If our current character is a valid character (i.e. a letter or single/double quotes) then print it out
                         if((stringolon.matches(("[a-z\\s'\"]+")))) {
                             if(symbolon == ' ') {
                                 //Do nothing, we want to process whitespace for now
@@ -122,12 +124,13 @@ public class Lexer {
                                 counter++;
                             }
                         }
+                        //If it's not a valid character in the string, print an error
                         else {
                             System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Invalid Character Type Included In String");
                             errors++;
                             counter++;
                         }
-                        //Much like inAComment, if we're at the end of our current line and we don't have our quote pair token, print an error
+                        //If we're at the end of our current line and we don't have our quote pair token, print an error
                         if(string.length() == i + 1) {
                             System.out.println("WARNING LEXER - Warning: " + lineCounter + " : " + counter + " String Never Closed; Process Auto-Closed String Statement");
                             warnings++;
@@ -141,7 +144,7 @@ public class Lexer {
 
                     else {
                         //Switch statement to determine what we should do with our symbol tokens
-                        //Vaguely follows the grammar order from the project 1 grammar.pdf
+                        //Follows the grammar order from the project 1 grammar.pdf
                         switch(symbolon) {
                             //Token to end the current process. This will IMMEDIATELY end the program regardless of what comes after it, clear any indexes and hand it off to the handleToken class
                             case '$':
@@ -175,14 +178,9 @@ public class Lexer {
                             break;
                             //Open bracket token
                             case '{':
-                            //Basic steps to the lexer processing:
-                                //Passes token to the handleToken class for processing
                                 handleToken(list, "OPEN_BLOCK", "{", lineCounter, counter, programCounter);
-                                //Increments the counter
                                 counter++;
-                                //Sets itsABracket to true, indicating we're currently in a bracket statement
                                 itsABracket = true;
-                                //Resets stringolon
                                 stringolon = "";
                             break;
                             //Close bracket token
@@ -218,12 +216,14 @@ public class Lexer {
                                         counter++;
                                     }
                                 }
+                                //If we've got a == operand, add it as a token
                                 else if(forward == '=') {
                                     handleToken(list, "BOOLOP", "==", lineCounter, counter, programCounter);
                                     counter++;
                                     stringolon = "";
                                     donttouchtheEquals = true;
                                 }
+                                //If it's just a = by itself, say so
                                 else {
                                     handleToken(list, "ASSIGNOP", "=", lineCounter, counter, programCounter);
                                     counter++;
@@ -339,9 +339,16 @@ public class Lexer {
                                     counter++;
                                 }
                                 break;
+                            //We should never be encountering this outside of comments, so print an error if we encounter it
+                            case '*':
+                                System.out.println("ERROR LEXER - ERROR: " + lineCounter + " : " + counter + " Invalid Character \"*\" Detected Outside of Comment Statement");
+                                errors++;
+                                stringolon = "";
+                                counter++;
+                            break;
                             case '/':
                                 if(forward == '*') {
-                                    System.out.println("comments mode!!!");
+                                    //System.out.println("comments mode!!!"); // - use this to test
                                     inAComment = true;
                                 }
                                 else {
@@ -363,18 +370,8 @@ public class Lexer {
                                 counter++;
                                 stringolon = "";
                             break;
-
-                    }
-                    //Switch statement to handle our string inputs
-/*
-                        case "":
-                            if(inAComment == false) {
-                                //Print a warning if we get a *//*, since we obviously don't want to end comments we haven't even opened yet
-                                System.out.println("WARNING LEXER - WARNING: " + lineCounter + " : " + counter + " Comment End Detected Before Start");
-                                warnings++;
-                                counter++;
-                            }
-                        default:
+                        }
+                        /*default:
                             //Errors to encompass invalid tokens, which we will not be including in our grammar
                             if((symbolon == '@') || (symbolon == '>') || (symbolon == '<') || (symbolon == '|') || (symbolon == '[') || (symbolon == ']') || (symbolon == '%') || (symbolon == '.') || (symbolon == '&') || (symbolon == '#') || (symbolon == '?')) {
                                 System.out.println("ERROR LEXER - ERROR:" + lineCounter + " : " + counter + " Unrecognized Token");
@@ -383,21 +380,21 @@ public class Lexer {
                                 counter++;
                             }
                         }*/
-                        //Function to compare our individual letters. It's currently a bit wonky.
-                        if(Pattern.matches(compareLetters, stringolon)) {
-                            //TESTING PURPOSES
-                            int startPointer = i; //might not need this
-                            int endPointer = i + 1;
-                            String longestMatch = null;
 
+                        //Function to compare our individual letters. This sets an "endPointer" value and loops through our string, slowly narrowing down the options until we either find something or it stops
+                        if(Pattern.matches(compareLetters, stringolon)) {
+                            int startPointer = i; //might not need this
+                            int endPointer = i + 1; //endPointer value to iterate throught the string one at a time
+                            String longestMatch = null; //Stores our longest match as a string to be compared later
+
+                            //Loops through our string to see if we've got a match for any outlying characters
+                            //If substring matches from i to current endpointer, add keyword token and increment i
                             while(endPointer <= string.length()) {
-                                //System.out.println("I'm in the mainframe pt." + mainpart);
                                 String substring = string.substring(startPointer, endPointer);
                                 //System.out.println(substring);
                                 //System.out.println(longestMatch);
 
-                                //while the next token is a letter (NOT a symbol or whitespace):
-                                //If substring matches from i to endpointer, add keyword token and increment i
+                                //Encompasses type declarations and statements
                                 if(Pattern.matches("while", substring) || Pattern.matches("int", substring) || Pattern.matches("print", substring) || Pattern.matches("string", substring) || Pattern.matches("if", substring)) {
                                     if(Pattern.matches("int", substring)) {
                                         handleToken(list, "TYPE", "int", lineCounter, counter, programCounter);
@@ -426,6 +423,8 @@ public class Lexer {
                                     }
                                     //System.out.println(longestMatch);
                                 }
+
+                                //Encompasses boolean values and operands
                                 if(Pattern.matches("boolean", substring) || Pattern.matches("true", substring) || Pattern.matches("false", substring)) {
                                     if(Pattern.matches("boolean", substring)) {
                                         handleToken(list, "TYPE", "bool", lineCounter, counter, programCounter);
@@ -445,11 +444,10 @@ public class Lexer {
                                 }
                                 endPointer++;
                             }
+                            //If there's a match in our original regex statement but it doesn't match anything else, it's a character
                             if(longestMatch == null) {
                                 handleToken(list, "ID", string.charAt(i) + "", lineCounter, counter, programCounter);
                             }
-
-                            //this will print out regardless of comments, but that's okay because we don't have anything to check for comments yet
                             //System.out.println(startPointer);
                             //System.out.println(endPointer);
                             stringolon = "";
