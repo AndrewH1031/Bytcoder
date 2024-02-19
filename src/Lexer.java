@@ -8,10 +8,6 @@ import java.io.FileNotFoundException; //Import for catch string at the end of th
 import java.util.ArrayList;
 import java.util.regex.Pattern; //Import to match our letters/digits with a matcher tool
 
-//NOTE: Code is currently able to properly lex sans some letters shenanigans
-//Individual letters are currently very shy and will only show their faces if they are surrounded by whitespace or at the beginning/end of a line!
-//Please bear with me as I attempt to correct this mistake.
-
 public class Lexer {
 
     public static void main(String src) {
@@ -25,10 +21,9 @@ public class Lexer {
         int errors = 0; //Amount of errors we get when lexing
         int warnings = 0; //Amount of warnings we get when lexing
         
-        String stringolon = ""; //String to grab our current soon-to-be token from the file
+        String stringolon = ""; //String to grab our current soon-to-be token from the file - WE MAY NOT NEED THIS IN THE FUTURE
 
         String compareLetters = "[a-zA-Z]"; //String to compare our valid ID tokens
-        String[] keyword = {"int", "string", "print", "while", "id", "for", "boolean", "true", "false", "if"};
 
         boolean inAComment = false; //Determines if we're currently in a comment
         boolean inAString = false; //Determines if we're currently in a string
@@ -38,7 +33,6 @@ public class Lexer {
 
         char symbolon = ' '; //Character to store the current input in the string, one at a time
         char forward = ' ';
-        char forwarder = ' ';
         
         //Try statement, we NEED this for our file input to work
         try {
@@ -87,6 +81,7 @@ public class Lexer {
                     }
 
                     //If we're in a comment, check to see if there's a matching end comment token we can use
+                    //Works for now, will implement functionality with forward eventually
                     if(inAComment == true) {
                         counter++;
                         switch(symbolon) {
@@ -338,12 +333,24 @@ public class Lexer {
                                 }
                                 //Otherwise, we're not meant to encounter this by itself, so we print an error
                                 else {
-                                    System.out.println("ERROR LEXER - ERROR:" + lineCounter + " : " + counter + " Invalid Character \"!\" Detected Outside of BoolOp Statement");
+                                    System.out.println("ERROR LEXER - ERROR: " + lineCounter + " : " + counter + " Invalid Character \"!\" Detected Outside of BoolOp Statement");
                                     errors++;
                                     stringolon = "";
                                     counter++;
                                 }
                                 break;
+                            case '/':
+                                if(forward == '*') {
+                                    System.out.println("comments mode!!!");
+                                    inAComment = true;
+                                }
+                                else {
+                                    System.out.println("ERROR LEXER - ERROR: " + lineCounter + " : " + counter + " Invalid Character \"/\" Detected Outside of Comment Statement");
+                                    errors++;
+                                    stringolon = "";
+                                    counter++;
+                                }
+                            break;
                             //Space token
                             //We DO NOT want to tokenize this yet, it will cause too much noise in the lexer
                             case ' ':
@@ -359,63 +366,7 @@ public class Lexer {
 
                     }
                     //Switch statement to handle our string inputs
-                    /*switch(stringolon) {
-                        //String expression token
-                        case "string":
-                            handleToken(list, "TYPE", "string", lineCounter, counter, programCounter);
-                            stringolon = "";
-                            counter++;
-                        break;
-                        //Int expression token
-                        case "int":
-                            handleToken(list, "TYPE", "int", lineCounter, counter, programCounter);
-                            stringolon = "";
-                            counter = counter + 3;
-                        break;
-                        //Print expression token
-                        case "print":
-                            handleToken(list, "PRINTSTATEMENT", "print", lineCounter, counter, programCounter);
-                            stringolon = "";
-                            counter++;
-                        break;
-                        //While expression token
-                        case "while":
-                            handleToken(list, "WHILESTATEMENT", "while", lineCounter, counter, programCounter);
-                            stringolon = "";
-                            counter = counter + 4;
-                        break;
-                        //If expression token
-                        case "if":
-                            handleToken(list, "IFSTATEMENT", "if", lineCounter, counter, programCounter);
-                            stringolon = "";
-                            counter++;
-                        break;
-                        //Boolean expression token
-                        case "boolean":
-                            handleToken(list, "TYPE", "bool", lineCounter, counter, programCounter);
-                            stringolon = "";
-                            counter++;
-                        break;
-                        //Boolean value token
-                        case "true":
-                            handleToken(list, "BOOLVAL", "true", lineCounter, counter, programCounter);
-                            stringolon = "";
-                            counter++;
-                        break;
-                        //Boolean value token
-                        case "false":
-                            handleToken(list, "BOOLVAL", "false", lineCounter, counter, programCounter);
-                            stringolon = "";
-                            counter++;
-                        break;
-                        case "/*":
-                            if(inAComment == false) {
-                                //System.out.println("COMMENTS MODE ACTIVATED!!!"); - use this to test
-                                inAComment = true;
-                                counter++;
-                            }
-                        //Token to NOT end our comment string - this part is handled by our inAComment function!
-                        //Instead prints an error, since there's no way to get here if you formatted everything correctly
+/*
                         case "":
                             if(inAComment == false) {
                                 //Print a warning if we get a *//*, since we obviously don't want to end comments we haven't even opened yet
@@ -437,41 +388,65 @@ public class Lexer {
                             //TESTING PURPOSES
                             int startPointer = i; //might not need this
                             int endPointer = i + 1;
-                            int mainpart = 0;
                             String longestMatch = null;
 
                             while(endPointer <= string.length()) {
                                 //System.out.println("I'm in the mainframe pt." + mainpart);
                                 String substring = string.substring(startPointer, endPointer);
-                                System.out.println(substring);
+                                //System.out.println(substring);
                                 //System.out.println(longestMatch);
 
                                 //while the next token is a letter (NOT a symbol or whitespace):
                                 //If substring matches from i to endpointer, add keyword token and increment i
-                                if(Pattern.matches("while", substring) || Pattern.matches("int", substring) || Pattern.matches("print", substring)) {
+                                if(Pattern.matches("while", substring) || Pattern.matches("int", substring) || Pattern.matches("print", substring) || Pattern.matches("string", substring) || Pattern.matches("if", substring)) {
                                     if(Pattern.matches("int", substring)) {
-                                        System.out.println("int!!");
+                                        handleToken(list, "TYPE", "int", lineCounter, counter, programCounter);
                                         i = i + 2;
                                         longestMatch = substring;
                                     }
                                     else if(Pattern.matches("while", substring)) {
-                                        System.out.println("while!");
+                                        handleToken(list, "WHILESTATEMENT", "while", lineCounter, counter, programCounter);
                                         i = i + 4;
                                         longestMatch = substring;
                                     }
                                     if(Pattern.matches("print", substring)) {
-                                        System.out.println("print!");
+                                        handleToken(list, "PRINTSTATEMENT", "print", lineCounter, counter, programCounter);
                                         i = i + 4;
                                         longestMatch = substring;
                                     }
-                                    System.out.println(longestMatch);
+                                    if(Pattern.matches("string", substring)) {
+                                        handleToken(list, "TYPE", "string", lineCounter, counter, programCounter);
+                                        i = i + 5;
+                                        longestMatch = substring;
+                                    }
+                                    if(Pattern.matches("if", substring)) {
+                                        handleToken(list, "IFSTATEMENT", "if", lineCounter, counter, programCounter);
+                                        i = i + 1;
+                                        longestMatch = substring;
+                                    }
+                                    //System.out.println(longestMatch);
                                 }
-                                
+                                if(Pattern.matches("boolean", substring) || Pattern.matches("true", substring) || Pattern.matches("false", substring)) {
+                                    if(Pattern.matches("boolean", substring)) {
+                                        handleToken(list, "TYPE", "bool", lineCounter, counter, programCounter);
+                                        i = i + 6;
+                                        longestMatch = substring;
+                                    }
+                                    if(Pattern.matches("true", substring)) {
+                                        handleToken(list, "BOOLVAL", "true", lineCounter, counter, programCounter);
+                                        i = i + 3;
+                                        longestMatch = substring;
+                                    }
+                                    if(Pattern.matches("false", substring)) {
+                                        handleToken(list, "BOOLVAL", "false", lineCounter, counter, programCounter);
+                                        i = i + 4;
+                                        longestMatch = substring;
+                                    }
+                                }
                                 endPointer++;
-                                mainpart++;
                             }
                             if(longestMatch == null) {
-                                System.out.println("individual token found");
+                                handleToken(list, "ID", string.charAt(i) + "", lineCounter, counter, programCounter);
                             }
 
                             //this will print out regardless of comments, but that's okay because we don't have anything to check for comments yet
