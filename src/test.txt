@@ -8,4 +8,3 @@
 {}{}}}{}{{{}}}$
 (( ' look /* out */ world, its me! ' */ $
 /* looooooong comment 23 */ /
-while if while if intif falsetrueaaasdintff */ @ !== $

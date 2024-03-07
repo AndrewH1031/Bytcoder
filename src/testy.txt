@@ -1,1 +1,8 @@
 intprint whileif ifbooltruebooleanfalse aasint falsedf $
+boolean d
+d = ("string" != "string")
+$
+print=whileif"intstring"
+intstringbooleanfalse
+true $
+{int A}$

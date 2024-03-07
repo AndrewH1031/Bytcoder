@@ -5,9 +5,7 @@
 
 /* this is a really big boolop
 */ !======= $
-<<<<<<< HEAD
 intstringfalse %% ba a b f g .90 ??& h $
 =======
-intstringfalse %% ba a b f g h $
->>>>>>> b5658751bfe7227ca00a2bb38500341b0eb61fec
+intstringfalse %% baabfgh $
 !====== == = ==== string */$
