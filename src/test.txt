@@ -7,4 +7,9 @@
 }$
 {}{}}}{}{{{}}}$
 (( ' look /* out */ world, its me! ' */ $
+<<<<<<< HEAD
 /* looooooong comment 23 */ /
+=======
+/* looooooong comment 23 */ /
+while if while if intif falsetrueaaasdintff */ @ !== $
+>>>>>>> c95c5d7365b34b54df4dd40eb2aa6d19fc65bcc8

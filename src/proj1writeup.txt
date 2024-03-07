@@ -2,7 +2,7 @@ Andrew Hatch - CMPT432N Compilers
 
 === Project 1 Test Cases Writeup ===
 
-Note that currently letters are handled a bit weird, it will tokenize the beginning of a keyword (which we DEFINITELY DO NOT want). I am working on a solution to this.
+UPDATE: Lexer now works properly, including keyword matching. Yay!
 
 test.txt:
 Lexes properly. Note that strings take priority over comments in my lexer, so it will instantly gloss over the
