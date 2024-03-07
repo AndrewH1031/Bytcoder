@@ -6,10 +6,4 @@
 /* this is a really big boolop
 */ !======= $
 intstringfalse %% ba a b f g .90 ??& h $
-=======
-<<<<<<< HEAD
-intstringfalse %% baabfgh $
-!====== == = ==== string */$
-=======
-intstringfalse %% ba a b f g h $
 !====== == = ==== string */$
