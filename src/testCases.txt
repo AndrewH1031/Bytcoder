@@ -13,4 +13,3 @@ intstringfalse %% baabfgh $
 =======
 intstringfalse %% ba a b f g h $
 !====== == = ==== string */$
->>>>>>> c95c5d7365b34b54df4dd40eb2aa6d19fc65bcc8
