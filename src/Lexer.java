@@ -60,8 +60,8 @@ public class Lexer {
                     stringolon = stringolon + string.charAt(i);
                     symbolon = string.charAt(i);
 
-                    if(string.length()-1 > i + 1) {
-                        forward = string.charAt(i+1);
+                    if(string.length() - 1 > i + 1) {
+                        forward = string.charAt(i + 1);
                     }
                     
                     //System.out.println(symbolon);
@@ -113,14 +113,14 @@ public class Lexer {
                         }
 
                         //If our current character is a valid character (i.e. a letter or single/double quotes) then print it out
-                        if((stringolon.matches(("[a-z\\s'\"]+")))) {
+                        else if((stringolon.matches(("[a-z]+")))) {
                             if(symbolon == ' ') {
                                 //Do nothing, we want to process whitespace for now
                                 counter++;
                             }
                             else {
                                 //Consider every valid token in a string as a lowercase letter and handle it
-                                handleToken(list, "ID", (string.charAt(i) + ""), lineCounter, counter, programCounter);
+                                handleToken(list, "CHAR", (string.charAt(i) + ""), lineCounter, counter, programCounter);
                                 counter++;
                             }
                         }
@@ -130,8 +130,8 @@ public class Lexer {
                             errors++;
                             counter++;
                         }
-                        //If we're at the end of our current line and we don't have our quote pair token, print an error
-                        if(string.length() == i + 1) {
+                        //If we're at the end of our current line and we don't have our quote pair token (AND our current token isn't the pair token), print an error
+                        if((string.length() == i + 1) && (string.charAt(i) != '\"')) {
                             System.out.println("WARNING LEXER - Warning: " + lineCounter + " : " + counter + " String Never Closed; Process Auto-Closed String Statement");
                             warnings++;
                             //Force close the string
@@ -370,8 +370,7 @@ public class Lexer {
                                 counter++;
                                 stringolon = "";
                             break;
-                        }
-                        /*default:
+                            default:
                             //Errors to encompass invalid tokens, which we will not be including in our grammar
                             if((symbolon == '@') || (symbolon == '>') || (symbolon == '<') || (symbolon == '|') || (symbolon == '[') || (symbolon == ']') || (symbolon == '%') || (symbolon == '.') || (symbolon == '&') || (symbolon == '#') || (symbolon == '?')) {
                                 System.out.println("ERROR LEXER - ERROR:" + lineCounter + " : " + counter + " Unrecognized Token");
@@ -379,7 +378,9 @@ public class Lexer {
                                 stringolon = "";
                                 counter++;
                             }
-                        }*/
+                        }
+                    }
+                        
 
                         //Function to compare our individual letters. This sets an "endPointer" value and loops through our string, slowly narrowing down the options until we either find something or it stops
                         if(Pattern.matches(compareLetters, stringolon)) {
@@ -446,7 +447,13 @@ public class Lexer {
                             }
                             //If there's a match in our original regex statement but it doesn't match anything else, it's a character
                             if(longestMatch == null) {
+                                if(Character.isUpperCase(symbolon)) {
+                                    System.out.println("WARNING LEXER - WARNING: " + lineCounter + " : " + counter + " Uppercase Character " + symbolon + " Not Supported");
+                                    warnings++;
+                                }
+                                else {
                                 handleToken(list, "ID", string.charAt(i) + "", lineCounter, counter, programCounter);
+                                }
                             }
                             //System.out.println(startPointer);
                             //System.out.println(endPointer);
@@ -454,7 +461,7 @@ public class Lexer {
                         } 
                     }
                 }
-            }
+            
         //Close our file input
         tokenList.close();
         }
