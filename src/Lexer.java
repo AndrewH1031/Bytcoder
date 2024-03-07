@@ -447,6 +447,7 @@ public class Lexer {
                             }
                             //If there's a match in our original regex statement but it doesn't match anything else, it's a character
                             if(longestMatch == null) {
+                                //Making sure we don't invalidate our grammar rules with pesky Uppercases
                                 if(Character.isUpperCase(symbolon)) {
                                     System.out.println("WARNING LEXER - WARNING: " + lineCounter + " : " + counter + " Uppercase Character " + symbolon + " Not Supported");
                                     warnings++;
