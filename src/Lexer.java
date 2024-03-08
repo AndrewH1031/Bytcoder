@@ -12,6 +12,8 @@ public class Lexer {
 
     public static void main(String src) {
 
+        Parser Parser = new Parser(); //Parser setup, this will come in handy later
+
         ArrayList<Token> list = new ArrayList<>(); //New ArrayList to handle our input
         File fileList = new File(src); //This is what allows us to pass our test files to our scanner, uses the src file which is where our Compiler.java file is located
 
@@ -153,6 +155,7 @@ public class Lexer {
                                 stringolon = "";
                                 symbolon = ' ';
                                 programCounter++;
+                                Parser.main(list);
                                 //If we've got an open bracket when the program is terminated, print an error
                                 if(itsABracket == true) {
                                     System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Bracket Statement Never Closed");
