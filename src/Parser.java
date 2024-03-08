@@ -25,8 +25,8 @@ public class Parser {
     int progCounter = 0; //For each parse line
 
     public void main(ArrayList<Token> list) {
-        System.out.println("by the power of God and Whiteclaw, I conjure forth this parser!");
-        parse();
+        System.out.println("by the power of God and Whiteclaw, I conjure forth this Parser!");
+        //parse();
 
         //Token input from Lexer goes here
     }
@@ -133,7 +133,7 @@ public class Parser {
         //String, Int, Boolean type checking goes here
     }
 
-    public static void parseExpr() {
+    public static void parseExpression() {
         System.out.println("parse variable declarations");
         //Expressions go here (addition, strings, etc.)
         parseInt();

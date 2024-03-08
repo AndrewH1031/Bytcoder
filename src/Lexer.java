@@ -35,7 +35,6 @@ public class Lexer {
 
         char symbolon = ' '; //Character to grab the current input in the string, one at a time
         char forward = ' '; //Character to check ahead one spot in our string for things such as boolean operands and comment endings
-        
         //Try statement, we NEED this for our file input to work
         try {
         Scanner tokenList = new Scanner(fileList);
