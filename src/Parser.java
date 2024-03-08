@@ -22,11 +22,13 @@ public class Parser {
      */
     
     ArrayList<String> CST = new ArrayList<>(); //This is a list for now, will likely upgrade into a full tree eventually
-    int progCounter = 0;
+    int progCounter = 0; //For each parse line
 
     public void main(ArrayList<Token> list) {
         System.out.println("by the power of God and Whiteclaw, I conjure forth this parser!");
         parse();
+
+        //Token input from Lexer goes here
     }
 
     public static void parse() {
@@ -52,6 +54,7 @@ public class Parser {
     public static void parseStatement() {
         System.out.println("parse statement stuff");
         //I think this is how you lay it out
+        //add if statements depending on what kind of token
         parseBlock();
         parsePrint();
         parseAssign();
@@ -68,63 +71,74 @@ public class Parser {
     }
 
     public static void parseAssign() {
-        System.out.println("parse assignments");
-        //something here to check for the = declaration sign
+        System.out.println("parse variable assignments");
+        parseID();
+        //something here to make sure it's followed up by an = symbol
+        //then pass to varDecl?
     }
 
     public static void parseInt() {
         System.out.println("parse Int");
-        //
+        //Expression
     }
 
     public static void parseString() {
         System.out.println("parse String");
-        //
+        //Expression
     }
 
     public static void parseBoolean() {
         System.out.println("parse Boolean");
-        //
+        //Expression
     }
 
     public static void parseVarDecl() {
         System.out.println("parse variable declarations");
-        //
+        //Declare variables here
     }
 
     public static void parseIf() {
         System.out.println("parse If statements");
-        //
+        //add if
     }
 
     public static void parseWhile() {
         System.out.println("parse While statements");
-        //
+        //add while
     }
 
     public static void parseChar() {
         System.out.println("parse Char");
-        //
+        //add char
+    }
+
+    public static void parseCharList() {
+        System.out.println("parse Char list for valid characters");
+        //Check to see if we have a valid char for our current token (i.e. if it's considered a char, NOT an id in the token list)
+        parseChar();
     }
 
     public static void parseDigit() {
         System.out.println("parse digits");
-        //
+        //add digits
     }
 
     public static void parseID() {
         System.out.println("parse IDs");
-        //
+        //add IDs
     }
 
-    public static void parseType() {
+    public static void parseTypeCheck() {
         System.out.println("parse for Int, String, Boolean");
         //String, Int, Boolean type checking goes here
     }
 
     public static void parseExpr() {
         System.out.println("parse variable declarations");
-        //String, Int, Boolean type checking goes here
+        //Expressions go here (addition, strings, etc.)
+        parseInt();
+        parseString();
+        parseBoolean();
     }
 
     public static void parseBoolOp() {
@@ -139,7 +153,9 @@ public class Parser {
 
     public static void parseAdd() {
         System.out.println("parse Intop + symbol");
-        //+
+        //+ goes here
     }
     
+    //Print CST here????
+
 }
