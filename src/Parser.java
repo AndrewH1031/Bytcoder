@@ -24,8 +24,10 @@ public class Parser {
     ArrayList<String> CST = new ArrayList<>(); //This is a list for now, will likely upgrade into a full tree eventually
     int progCounter = 0; //For each parse line
 
+    //My godforsaken 4 year old laptop cannot run this thing in the command prompt to save its life, so please bear with me as I lose my mind trying to update it fruitlessly
+
     public void main(ArrayList<Token> list) {
-        System.out.println("by the power of God and Whiteclaw, I conjure forth this Parser!");
+        System.out.println("fuck this game");
         //parse();
 
         //Token input from Lexer goes here
