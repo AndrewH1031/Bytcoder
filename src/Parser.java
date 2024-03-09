@@ -22,41 +22,80 @@ public class Parser {
      */
     
     ArrayList<String> CST = new ArrayList<>(); //This is a list for now, will likely upgrade into a full tree eventually
-    int progCounter = 0; //For each parse line
+    ArrayList<Token> parseList;
+    int parseCounter = 0;
+    String currentToken;
 
     //My godforsaken 4 year old laptop cannot run this thing in the command prompt to save its life, so please bear with me as I lose my mind trying to update it fruitlessly
 
+    //nvm figured it out, just make a new copy of it locally and run it there
+    //don't actually change anything, just use the file to run stuff
+    //delete when done, repeat ad nauseum - this method is so stupid and genuinely shouldn't work but it does and I don't care anymore
+
     public void main(ArrayList<Token> list) {
-        System.out.println("fuck this game");
-        //parse();
+        parseList = list;
+        currentToken = parseList.get(parseCounter).tokenType;
+
+        System.out.println("by the power of God and Whiteclaw, I conjure forth this Parser!");
+        System.out.println();
+        System.out.println("Beginning Parser...");
+        parse();
 
         //Token input from Lexer goes here
     }
 
-    public static void parse() {
+    public void parse() {
         System.out.println("parse body");
         parseProgram();
     }
 
-    public static void parseProgram() {
+    public void parseProgram() {
         System.out.println("parse program");
         parseBlock();
     }
 
-    public static void parseBlock() {
+    public void parseBlock() {
         System.out.println("parse block");
         parseStatementList();
     }
 
-    public static void parseStatementList() {
+    public void parseStatementList() {
         System.out.println("parse statement list");
-        parseStatement();
+        if(currentToken.equals("PRINTSTATEMENT") | currentToken.equals("ID") | currentToken.equals("TYPE") | currentToken.equals("WHILESTATEMENT") | currentToken.equals("IFSTATEMENT") | currentToken.equals("OPEN_BLOCK")) {
+            System.out.println("token here");
+            //System.out.println(currentToken);
+
+            parseStatement();
+            parseStatementList();
+        }
+        else {
+            //do nothing
+        }
     }
 
-    public static void parseStatement() {
+    public void parseStatement() {
         System.out.println("parse statement stuff");
         //I think this is how you lay it out
-        //add if statements depending on what kind of token
+        //add if/case statements depending on what kind of token
+        switch(currentToken) {
+            case("OPEN_BLOCK"):
+                System.out.println("open block detected");
+            break;
+            case("PRINTSTATEMENT"):
+
+            break;
+            case("IFSTATEMENT"):
+                
+            break;
+
+            case("WHILESTATEMENT"):
+
+            break; 
+            case("ID"):
+
+            break;
+        }
+        //ignore this stuff for nows
         parseBlock();
         parsePrint();
         parseAssign();
