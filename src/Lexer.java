@@ -201,7 +201,7 @@ public class Lexer {
                             break;
                             //Close parentheses token
                             case ')':
-                                handleToken(list, "CLOSE_BLOCK", ")", lineCounter, counter, programCounter);
+                                handleToken(list, "CLOSE_PAREN", ")", lineCounter, counter, programCounter);
                                 counter++;
                                 stringolon = "";
                             break;
