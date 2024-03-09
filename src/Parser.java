@@ -63,9 +63,9 @@ public class Parser {
     public void parseStatementList() {
         System.out.println("parse statement list");
         currentToken = parseList.get(parseCounter).tokenType;
-        System.out.println(currentToken); //temporary
+        //System.out.println(currentToken);
         if(currentToken == "PRINTSTATEMENT" || currentToken == "ID" || currentToken == "WHILESTATEMENT" || currentToken == "IFSTATEMENT" || currentToken == "OPEN_BLOCK" || currentToken == "TYPEINT" || currentToken == "TYPESTRING" || currentToken == "TYPEBOOL") {
-            System.out.println("token here?");
+            //System.out.println("token here?");
 
             parseStatement();
             parseStatementList();
@@ -77,48 +77,39 @@ public class Parser {
 
     public void parseStatement() {
         System.out.println("parse statement stuff");
-        //I think this is how you lay it out
         //add if/case statements depending on what kind of token
         switch(currentToken) {
             case("OPEN_BLOCK"):
-                System.out.println("open block detected");
+                handleParseToken("OPEN_BLOCK", "parseBlock()");
                 parseCounter++;
-                System.out.println(parseCounter);
             break;
             case("PRINTSTATEMENT"):
-                System.out.println("print statement detected");
+                parsePrint();
                 parseCounter++;
-                System.out.println(parseCounter);
             break;
             case("IFSTATEMENT"):
-                System.out.println("if statement detected");
+                parseIf();
                 parseCounter++;
-                System.out.println(parseCounter);
             break;
             case("WHILESTATEMENT"):
-                System.out.println("while statement detected");
+                parseWhile();
                 parseCounter++;
-                System.out.println(parseCounter);
             break; 
             case("ID"):
-                System.out.println("id detected");
+                parseID();
                 parseCounter++;
-                System.out.println(parseCounter);
             break;
             case("TYPEINT"):
-                System.out.println("type: int detected");
+                parseInt();
                 parseCounter++;
-                System.out.println(parseCounter);
             break;
             case("TYPESTRING"):
-                System.out.println("type: string detected");
+                parseString();
                 parseCounter++;
-                System.out.println(parseCounter);
             break;
             case("TYPEBOOL"):
-                System.out.println("type: bool detected");
+                handleParseToken("TYPEBOOL", "parseBoolean()");
                 parseCounter++;
-                System.out.println(parseCounter);
             break;
         }
         //ignore this stuff for nows
@@ -130,99 +121,95 @@ public class Parser {
         parseWhile();*/
     }
 
-    public static void parsePrint() {
-        System.out.println("parse print");
+    public void parsePrint() {
+        handleParseToken("PRINTSTATEMENT", "parsePrintStatement()");
         //May not need these two
-        parseExpression();
-        parseCharList();
+        /*parseExpression();
+        parseCharList();*/
     }
 
-    public static void parseAssign() {
-        System.out.println("parse variable assignments");
-        parseID();
+    public void parseAssign() {
         //something here to make sure it's followed up by an = symbol
         //then pass to varDecl?
     }
 
-    public static void parseInt() {
-        System.out.println("parse Int");
+    public void parseInt() {
+        handleParseToken("TYPEINT", "parseInt()");
         //Expression
     }
 
-    public static void parseString() {
-        System.out.println("parse String");
+    public void parseString() {
+        handleParseToken("TYPESTRING", "parseString()");
         //Expression
     }
 
-    public static void parseBoolean() {
-        System.out.println("parse Boolean");
+    public void parseBoolean() {
         //Expression
     }
 
-    public static void parseVarDecl() {
-        System.out.println("parse variable declarations");
+    public void parseVarDecl() {
         //Declare variables here
     }
 
-    public static void parseIf() {
-        System.out.println("parse If statements");
+    public void parseIf() {
+        handleParseToken("IFSTATEMENT", "parseIfStatement()");
         //add if
     }
 
-    public static void parseWhile() {
-        System.out.println("parse While statements");
+    public void parseWhile() {
+        handleParseToken("WHILESTATEMENT", "parseWhileStatement()");
         //add while
     }
 
-    public static void parseChar() {
-        System.out.println("parse Char");
+    public void parseChar() {
         //add char
     }
 
-    public static void parseCharList() {
-        System.out.println("parse Char list for valid characters");
-        //Check to see if we have a valid char for our current token (i.e. if it's considered a char, NOT an id in the token list)
-        parseChar();
+    public void parseCharList() {
+        //Check to see if we have a valid char for our current string (i.e. if it's considered a char, NOT an id in the token list)
     }
 
-    public static void parseDigit() {
-        System.out.println("parse digits");
+    public void parseDigit() {
         //add digits
     }
 
-    public static void parseID() {
-        System.out.println("parse IDs");
+    public void parseID() {
+        handleParseToken("ID", "parseID()");
         //add IDs
     }
 
     public static void parseTypeCheck() {
-        System.out.println("parse for Int, String, Boolean");
         //String, Int, Boolean type checking goes here
     }
 
-    public static void parseExpression() {
-        System.out.println("parse variable declarations");
+    public void parseExpression() {
         //Expressions go here (addition, strings, etc.)
-        parseInt();
-        parseString();
-        parseBoolean();
     }
 
     public static void parseBoolOp() {
-        System.out.println("parse Boolean operands");
         //Equals, not equals goes here
     }
 
     public static void parseEBoolVal() {
-        System.out.println("parse Boolean values");
         //True, false go here
     }
 
     public static void parseAdd() {
-        System.out.println("parse Intop + symbol");
         //+ goes here
     }
     
     //Print CST here????
+
+    //Could possibly change this to accept currentToken instead of being non-static
+    public void handleParseToken(String expected, String output) {
+        if(currentToken == expected) {
+            System.out.println(expected); //temporary
+        }
+        else {
+            System.out.println("error! wrong token here");
+        }
+        //compare expected to given
+        System.out.println("PARSER: " + output);
+    }
 
 }
