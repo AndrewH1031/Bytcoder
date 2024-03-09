@@ -155,6 +155,7 @@ public class Lexer {
                                 symbolon = ' ';
                                 programCounter++;
                                 Parser.main(list);
+                                list.clear();
                                 //If we've got an open bracket when the program is terminated, print an error
                                 if(itsABracket == true) {
                                     System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Bracket Statement Never Closed");
@@ -400,7 +401,7 @@ public class Lexer {
                                 //Encompasses type declarations and statements
                                 if(Pattern.matches("while", substring) || Pattern.matches("int", substring) || Pattern.matches("print", substring) || Pattern.matches("string", substring) || Pattern.matches("if", substring)) {
                                     if(Pattern.matches("int", substring)) {
-                                        handleToken(list, "TYPE", "int", lineCounter, counter, programCounter);
+                                        handleToken(list, "TYPEINT", "int", lineCounter, counter, programCounter);
                                         i = i + 2;
                                         longestMatch = substring;
                                     }
@@ -415,7 +416,7 @@ public class Lexer {
                                         longestMatch = substring;
                                     }
                                     if(Pattern.matches("string", substring)) {
-                                        handleToken(list, "TYPE", "string", lineCounter, counter, programCounter);
+                                        handleToken(list, "TYPESTRING", "string", lineCounter, counter, programCounter);
                                         i = i + 5;
                                         longestMatch = substring;
                                     }
@@ -430,7 +431,7 @@ public class Lexer {
                                 //Encompasses boolean values and operands
                                 if(Pattern.matches("boolean", substring) || Pattern.matches("true", substring) || Pattern.matches("false", substring)) {
                                     if(Pattern.matches("boolean", substring)) {
-                                        handleToken(list, "TYPE", "bool", lineCounter, counter, programCounter);
+                                        handleToken(list, "TYPEBOOL", "bool", lineCounter, counter, programCounter);
                                         i = i + 6;
                                         longestMatch = substring;
                                     }

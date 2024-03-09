@@ -23,7 +23,7 @@ public class Parser {
     
     ArrayList<String> CST = new ArrayList<>(); //This is a list for now, will likely upgrade into a full tree eventually
     ArrayList<Token> parseList;
-    int parseCounter = 0;
+    int parseCounter = 0; //for counting each token in the list, one by one
     String currentToken;
 
     //My godforsaken 4 year old laptop cannot run this thing in the command prompt to save its life, so please bear with me as I lose my mind trying to update it fruitlessly
@@ -35,6 +35,7 @@ public class Parser {
     public void main(ArrayList<Token> list) {
         parseList = list;
         currentToken = parseList.get(parseCounter).tokenType;
+        parseCounter = 0;
 
         System.out.println("by the power of God and Whiteclaw, I conjure forth this Parser!");
         System.out.println();
@@ -61,9 +62,10 @@ public class Parser {
 
     public void parseStatementList() {
         System.out.println("parse statement list");
-        if(currentToken.equals("PRINTSTATEMENT") | currentToken.equals("ID") | currentToken.equals("TYPE") | currentToken.equals("WHILESTATEMENT") | currentToken.equals("IFSTATEMENT") | currentToken.equals("OPEN_BLOCK")) {
-            System.out.println("token here");
-            //System.out.println(currentToken);
+        currentToken = parseList.get(parseCounter).tokenType;
+        System.out.println(currentToken); //temporary
+        if(currentToken == "PRINTSTATEMENT" || currentToken == "ID" || currentToken == "WHILESTATEMENT" || currentToken == "IFSTATEMENT" || currentToken == "OPEN_BLOCK" || currentToken == "TYPEINT" || currentToken == "TYPESTRING" || currentToken == "TYPEBOOL") {
+            System.out.println("token here?");
 
             parseStatement();
             parseStatementList();
@@ -80,28 +82,52 @@ public class Parser {
         switch(currentToken) {
             case("OPEN_BLOCK"):
                 System.out.println("open block detected");
+                parseCounter++;
+                System.out.println(parseCounter);
             break;
             case("PRINTSTATEMENT"):
-
+                System.out.println("print statement detected");
+                parseCounter++;
+                System.out.println(parseCounter);
             break;
             case("IFSTATEMENT"):
-                
+                System.out.println("if statement detected");
+                parseCounter++;
+                System.out.println(parseCounter);
             break;
-
             case("WHILESTATEMENT"):
-
+                System.out.println("while statement detected");
+                parseCounter++;
+                System.out.println(parseCounter);
             break; 
             case("ID"):
-
+                System.out.println("id detected");
+                parseCounter++;
+                System.out.println(parseCounter);
+            break;
+            case("TYPEINT"):
+                System.out.println("type: int detected");
+                parseCounter++;
+                System.out.println(parseCounter);
+            break;
+            case("TYPESTRING"):
+                System.out.println("type: string detected");
+                parseCounter++;
+                System.out.println(parseCounter);
+            break;
+            case("TYPEBOOL"):
+                System.out.println("type: bool detected");
+                parseCounter++;
+                System.out.println(parseCounter);
             break;
         }
         //ignore this stuff for nows
-        parseBlock();
+        /*parseBlock();
         parsePrint();
         parseAssign();
         parseVarDecl();
         parseIf();
-        parseWhile();
+        parseWhile();*/
     }
 
     public static void parsePrint() {
