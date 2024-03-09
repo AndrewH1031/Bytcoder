@@ -85,7 +85,6 @@ public class Parser {
             break;
             case("PRINTSTATEMENT"):
                 parsePrint();
-                parseCounter++;
             break;
             case("IFSTATEMENT"):
                 parseIf();
@@ -100,15 +99,15 @@ public class Parser {
                 parseCounter++;
             break;
             case("TYPEINT"):
-                parseInt();
+                parseVarDecl();
                 parseCounter++;
             break;
             case("TYPESTRING"):
-                parseString();
+                parseVarDecl();
                 parseCounter++;
             break;
             case("TYPEBOOL"):
-                handleParseToken("TYPEBOOL", "parseBoolean()");
+                parseVarDecl();
                 parseCounter++;
             break;
         }
@@ -123,6 +122,14 @@ public class Parser {
 
     public void parsePrint() {
         handleParseToken("PRINTSTATEMENT", "parsePrintStatement()");
+        //add parseCount to handleParseToken please and thank you
+        parseCounter++;
+        handleParseToken("OPEN_PAREN", "parseOpenExpression()");
+        parseCounter++;
+        parseExpression();
+        parseCounter++;
+        handleParseToken("CLOSE_PAREN", "parseCloseExpression()");
+        parseCounter++;
         //May not need these two
         /*parseExpression();
         parseCharList();*/
@@ -145,10 +152,15 @@ public class Parser {
 
     public void parseBoolean() {
         //Expression
+        System.out.println("parseBoolean()");
+        handleParseToken("OPEN_PAREN", "parseOpenExpression()")
     }
 
     public void parseVarDecl() {
-        //Declare variables here
+        //Declare type variables here
+        System.out.println("parseVarDeclaration()")
+        parseTypeCheck();
+        parseID();
     }
 
     public void parseIf() {
@@ -163,14 +175,17 @@ public class Parser {
 
     public void parseChar() {
         //add char
+        handleParseToken("CHAR", "parseChar()");
     }
 
     public void parseCharList() {
         //Check to see if we have a valid char for our current string (i.e. if it's considered a char, NOT an id in the token list)
+        //Need to be able to detect string starts(open quotes) in lexer first
     }
 
     public void parseDigit() {
         //add digits
+        handleParseToken("NUM", "parseDigit()");
     }
 
     public void parseID() {
@@ -180,22 +195,45 @@ public class Parser {
 
     public static void parseTypeCheck() {
         //String, Int, Boolean type checking goes here
+        System.out.println("parseTypeChecking()")
+        if((currentToken == "TYPEINT") || (currentToken == "TYPESTRING") || (currentToken == "TYPEBOOL")) {
+            switch(currentToken) {
+                case("TYPEINT"):
+                    //Can probably optimize this
+                    handleParseToken("TYPEINT", "parseInt()");
+                break;
+                case("TYPESTRING"):
+                    handleParseToken("TYPEINT", "parseString()");
+                break;
+                case("TYPEBOOL"):
+                    handleParseToken("TYPEINT", "parseBoolean()");
+                break;
+            }
+        }
+        else {
+            //Expand this
+            System.out.println("Error! Unexpected token here");
+        }
     }
 
     public void parseExpression() {
         //Expressions go here (addition, strings, etc.)
+        System.out.println("parseExpression()");
     }
 
     public static void parseBoolOp() {
         //Equals, not equals goes here
+        handleParseToken("BOOLOP", "parseBooleanOperand()");
     }
 
     public static void parseEBoolVal() {
         //True, false go here
+        handleParseToken("BOOLVAL", "parseBooleanVal()");
     }
 
     public static void parseAdd() {
         //+ goes here
+        handleParseToken("INTOP", "parseIntop()");
     }
     
     //Print CST here????
