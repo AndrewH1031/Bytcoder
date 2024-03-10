@@ -42,22 +42,24 @@ public class Parser {
     }
 
     public void parse() {
-        System.out.println("parse body");
+        System.out.println("parseBody()");
         parseProgram();
     }
 
     public void parseProgram() {
-        System.out.println("parse program");
+        System.out.println("parseProgram()");
         parseBlock();
+        handleParseToken("EOP_BLOCK", "parseEndOfProgram()");
     }
 
     public void parseBlock() {
-        System.out.println("parse block");
+        System.out.println("parseBlock()");
         parseStatementList();
+        handleParseToken("CLOSE_BLOCK", "parseCloseBlock()");
     }
 
     public void parseStatementList() {
-        System.out.println("parse statement list");
+        System.out.println("parseStatementList()");
         currentToken = parseList.get(parseCounter).tokenType;
         System.out.println(currentToken);
         if(currentToken == "PRINTSTATEMENT" || currentToken == "ID" || currentToken == "WHILESTATEMENT" || currentToken == "IFSTATEMENT" || currentToken == "OPEN_BLOCK" || currentToken == "TYPEINT" || currentToken == "TYPESTRING" || currentToken == "TYPEBOOL") {
@@ -72,7 +74,7 @@ public class Parser {
     }
 
     public void parseStatement() {
-        System.out.println("parse statement stuff");
+        System.out.println("parseStatement()");
         //add if/case statements depending on what kind of token
         switch(currentToken) {
             case("OPEN_BLOCK"):
@@ -88,9 +90,11 @@ public class Parser {
                 parseWhile();
             break; 
             case("ID"):
+            //Assigning an ID or just a lone ID? Don't know, let's pass it to Assign()
                 parseAssign();
             break;
             case("TYPEINT"):
+            //Types are declared, need to pass it to VarDecl()
                 parseVarDecl();
             break;
             case("TYPESTRING"):
@@ -100,18 +104,10 @@ public class Parser {
                 parseVarDecl();
             break;
         }
-        //ignore this stuff for nows
-        /*parseBlock();
-        parsePrint();
-        parseAssign();
-        parseVarDecl();
-        parseIf();
-        parseWhile();*/
     }
 
     public void parsePrint() {
         handleParseToken("PRINTSTATEMENT", "parsePrintStatement()");
-        //add parseCount to handleParseToken please and thank you
         handleParseToken("OPEN_PAREN", "parseOpenExpression()");
         parseExpression();
         handleParseToken("CLOSE_PAREN", "parseCloseExpression()");
@@ -121,18 +117,11 @@ public class Parser {
     }
 
     public void parseAssign() {
-        //something here to make sure it's followed up by an = symbol
-        //then pass to varDecl?
+        //Assignment statement - check for an existing ID to declare, then search for a BoolOp and then finally pass it to Expression() to find what we want to declare it to
         System.out.println("parseAssignStatement()");
-        if(currentToken == "ID") {
-            parseID();
-            handleParseToken("ASSIGNOP", "parseAssignment()");
-            parseExpression();
-        }
-        else {
-            System.out.println("Error! Invalid token here");
-        }
-
+        parseID();
+        handleParseToken("ASSIGNOP", "parseAssignment()");
+        parseExpression();
     }
 
     public void parseInt() {
@@ -146,46 +135,54 @@ public class Parser {
     }
 
     public void parseBoolean() {
-        //Expression
+        //Boolean initialization - we need this for our while and if statements to work
         System.out.println("parseBoolean()");
         handleParseToken("OPEN_PAREN", "parseOpenExpression()");
+        //If we have an open paren, then that means our statement is valid - call to handle open paren, then parse through both expressions and the boolop in between
         if(currentToken == "OPEN_PAREN") {
+            //while(expr == expr/boolop) {
             handleParseToken("OPEN_PAREN", "parseOpenQuote()");
+            //Include expression functionality before tweaking this order
             parseExpression();
             parseBoolOp();
-            parseExpression();
+            parseExpression(); //if boolval then handle boolval; else expression??
         }
+        //Else if we've got a BoolVal (through parsing through an existing if/while statement), then initialize it
+        //Can likely just merge this with the main open paren statement
         else if(currentToken == "BOOLVAL") {
             parseBoolVal();
         }
+        //If we don't find anything relevant (i.e. open paren token), print an error
         else {
-            System.out.println("Error! Invalid token detected here");
+            System.out.println("Error! Invalid token detected here - Expected an open quote");
         }
     }
 
     public void parseVarDecl() {
-        //Declare type variables here
         System.out.println("parseVarDeclaration()");
+        //Double check ourselves to make sure we've got a Type on our hands
         parseTypeCheck();
+        //...then add the ID we want to declare
         parseID();
     }
 
     public void parseIf() {
+        //If statement: initialize if, then pass to Boolean() to determine what to do with the following parentheses, and then Block() to make sure we have an open bracket following too
         handleParseToken("IFSTATEMENT", "parseIfStatement()");
-        //add if
         parseBoolean();
         parseBlock();
     }
 
     public void parseWhile() {
+        //While statement: pretty much like if
         handleParseToken("WHILESTATEMENT", "parseWhileStatement()");
-        //add while
         parseBoolean();
         parseBlock();
     }
 
     public void parseChar() {
-        //add char
+        //add a Character (ID part of string)
+        //Need to add string functionality to lexer first
         handleParseToken("CHAR", "parseChar()");
     }
 
@@ -195,36 +192,36 @@ public class Parser {
     }
 
     public void parseDigit() {
-        //add digits
+        //add a Digit
         handleParseToken("NUM", "parseDigit()");
     }
 
     public void parseID() {
+        //add an ID
         handleParseToken("ID", "parseID()");
-        //add IDs
     }
 
     public void parseTypeCheck() {
-        //String, Int, Boolean type checking goes here
+        //String, Int, Boolean type checking to make extra sure we've got something to declare
         System.out.println("parseTypeChecking()");
         if((currentToken == "TYPEINT") || (currentToken == "TYPESTRING") || (currentToken == "TYPEBOOL")) {
             switch(currentToken) {
+                //Declare an Int
                 case("TYPEINT"):
                     //Can probably optimize this
                     handleParseToken("TYPEINT", "parseInt()");
                 break;
+                //Declare a String
                 case("TYPESTRING"):
                     handleParseToken("TYPESTRING", "parseString()");
                 break;
+                //Declare a Boolean
                 case("TYPEBOOL"):
                     handleParseToken("TYPEBOOL", "parseBoolean()");
                 break;
             }
         }
-        else {
-            //Expand this
-            System.out.println("Error! Unexpected token here");
-        }
+        //Don't need an else statement here since handleParseToken takes care of errors for us
     }
 
     public void parseExpression() {
@@ -233,20 +230,26 @@ public class Parser {
         //temporary
         parseCounter++;
         currentToken = parseList.get(parseCounter).tokenType;
+
+        //ROUGH IDEA FOR THIS:
+        //We need to use this for processing stuff in parentheses
+        //Check for parentheses first
+        //Detect open strings, numbers and IDs
+        //Print error as usual if stuff doesn't match
     }
 
     public void parseBoolOp() {
-        //Equals, not equals goes here
+        //add a BoolOp (==, !=) here - these will be our main comparison tools inside expressions
         handleParseToken("BOOLOP", "parseBooleanOperand()");
     }
 
     public void parseBoolVal() {
-        //True, false go here
+        //add a Boolean value (true, false)
         handleParseToken("BOOLVAL", "parseBooleanVal()");
     }
 
     public void parseAdd() {
-        //+ goes here
+        //add an IntOp (addition)
         handleParseToken("INTOP", "parseIntop()");
     }
     
