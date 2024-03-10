@@ -24,7 +24,9 @@ public class Parser {
     ArrayList<String> CST = new ArrayList<>(); //This is a list for now, will likely upgrade into a full tree eventually
     ArrayList<Token> parseList;
     int parseCounter = 0; //for counting each token in the list, one by one
+    int errors = 0;
     String currentToken;
+    boolean endTheDamnThing = false;
 
     //NOTE: code is currently VERY rough right now, will make sure it's working in future commits
 
@@ -49,27 +51,41 @@ public class Parser {
     public void parseProgram() {
         System.out.println("parseProgram()");
         parseBlock();
+        //Check for an End-Of-Program symbol
         handleParseToken("EOP_BLOCK", "parseEndOfProgram()");
+        if(endTheDamnThing == true) {
+            if(errors > 0) {
+                System.out.println();
+                System.out.println("PARSER: Parser failed with " + errorCount + "errors");
+                System.out.println("PARSER: CST skipped due to PARSER error(s)");
+            }
+            else {
+                System.out.println();
+                System.out.println("PARSER: Parsing completed successfully")
+                System.out.println("PARSER: Printing CST...");
+                //Call CST print function
+
+                //Semantic analyzer call here for the future
+            }
+        }
     }
 
     public void parseBlock() {
         System.out.println("parseBlock()");
+        handleParseToken("OPEN_BLOCK", "parseBlock()");
         parseStatementList();
+        //Use this to check for the complementary close block token
         handleParseToken("CLOSE_BLOCK", "parseCloseBlock()");
     }
 
     public void parseStatementList() {
         System.out.println("parseStatementList()");
         currentToken = parseList.get(parseCounter).tokenType;
-        System.out.println(currentToken);
+        //System.out.println(currentToken);
         if(currentToken == "PRINTSTATEMENT" || currentToken == "ID" || currentToken == "WHILESTATEMENT" || currentToken == "IFSTATEMENT" || currentToken == "OPEN_BLOCK" || currentToken == "TYPEINT" || currentToken == "TYPESTRING" || currentToken == "TYPEBOOL") {
-            //System.out.println("token here?");
 
             parseStatement();
             parseStatementList();
-        }
-        else {
-            //do nothing
         }
     }
 
@@ -78,7 +94,7 @@ public class Parser {
         //add if/case statements depending on what kind of token
         switch(currentToken) {
             case("OPEN_BLOCK"):
-                handleParseToken("OPEN_BLOCK", "parseBlock()");
+                parseBlock();
             break;
             case("PRINTSTATEMENT"):
                 parsePrint();
@@ -90,7 +106,7 @@ public class Parser {
                 parseWhile();
             break; 
             case("ID"):
-            //Assigning an ID or just a lone ID? Don't know, let's pass it to Assign()
+            //Assigning an ID or do we just have a lone ID? Don't know, let's pass it to Assign()
                 parseAssign();
             break;
             case("TYPEINT"):
@@ -103,17 +119,18 @@ public class Parser {
             case("TYPEBOOL"):
                 parseVarDecl();
             break;
+            default:
+                error("STATEMENT", currentToken);
+            break;
         }
     }
 
     public void parsePrint() {
+        //Print statement - check for a Print (obviously), then look for both sets of parentheses and an expression
         handleParseToken("PRINTSTATEMENT", "parsePrintStatement()");
         handleParseToken("OPEN_PAREN", "parseOpenExpression()");
         parseExpression();
         handleParseToken("CLOSE_PAREN", "parseCloseExpression()");
-        //May not need these two
-        /*parseExpression();
-        parseCharList();*/
     }
 
     public void parseAssign() {
@@ -154,7 +171,7 @@ public class Parser {
         }
         //If we don't find anything relevant (i.e. open paren token), print an error
         else {
-            System.out.println("Error! Invalid token detected here - Expected an open quote");
+            error("OPEN_PAREN", currentToken);
         }
     }
 
@@ -222,6 +239,10 @@ public class Parser {
             }
         }
         //Don't need an else statement here since handleParseToken takes care of errors for us
+        //nvm it's nice to have backup options
+        else {
+            error("TYPE", currentToken);
+        }
     }
 
     public void parseExpression() {
@@ -258,15 +279,28 @@ public class Parser {
     //Could possibly change this to accept currentToken instead of being non-static
     public void handleParseToken(String expected, String output) {
         if(currentToken == expected) {
-            System.out.println("Correct Token! It's " + expected); //temporary
+            if(currentToken == "EOP_BLOCK") {
+                endTheDamnThing = true;
+                //DON'T increment parseCounter here - it's the end of the program, there's nothing else left to read!
+            }
+            else {
+                System.out.println("PARSER: Correct Token! It's " + expected); //temporary
+                parseCounter++;
+            }
         }
         else {
-            System.out.println("error! wrong token here, should be " + expected + ", got " + currentToken);
+            error(expected, currentToken);
+            parseCounter++;
         }
         //compare expected to given
         //System.out.println("PARSER: " + output);
-        parseCounter++;
+
         currentToken = parseList.get(parseCounter).tokenType;
+    }
+
+    public void error(String expectedToken, String errorToken) {
+        System.out.println("ERROR: Expected [" + expectedToken + "], got [" + errorToken + "] on line " + parseList.get(parseCounter).lineCount);
+        errors++;
     }
 
 }
