@@ -110,14 +110,20 @@ public class Lexer {
                         if((string.charAt(i) == '\"') || (string.charAt(i) == '\'')) {
                             //System.out.println("String mode deactivated!"); //- use this to test
                             inAString = false;
+                            //Add our closing symbol as a token
+                            handleToken(list, "CLOSESTRING", "\"", lineCounter, counter, programCounter);
                             counter++;
+                            
                         }
 
                         //If our current character is a valid character (i.e. a letter or single/double quotes) then print it out
                         else if((stringolon.matches(("[a-z]+")))) {
                             if(symbolon == ' ') {
                                 //Do nothing, we want to process whitespace for now
+                                //HAHAHAHA I LIED!!!! We want to process it ONLY if it's in a string!
+                                handleToken(list, "CHARSPACE", " ", lineCounter, counter, programCounter);
                                 counter++;
+                                
                             }
                             else {
                                 //Consider every valid token in a string as a lowercase letter and handle it
@@ -154,24 +160,27 @@ public class Lexer {
                                 stringolon = "";
                                 symbolon = ' ';
                                 programCounter++;
-                                Parser.main(list);
-                                list.clear();
+                                
                                 //If we've got an open bracket when the program is terminated, print an error
                                 if(itsABracket == true) {
                                     System.out.println("ERROR LEXER - Error: " + lineCounter + " : " + counter + " Bracket Statement Never Closed");
                                     errors++;
                                     warnings = 0;
                                 }
-                                //If we have no errors, great! Print a message saying we're done
+                                //If we have no errors, great! Print a message saying we're done and hand it off to the Parser
                                 if(errors == 0) {
                                     System.out.println("Lexing completed with " + errors + " errors and " + warnings + " warnings recorded");
                                     errors = 0;
                                     warnings = 0;
+                                    Parser.main(list);
+                                    list.clear();
                                 }
                                 //If we have errors, we want to show how many we have, as well as point out that our lexer has failed
                                 else if(errors > 0) {
                                     System.out.println("Lexer failed with " + errors + " errors and " + warnings + " warnings recorded");
                                     errors = 0;
+                                    System.out.println("PARSER: Skipped Parsing due to LEXER errors");
+                                    System.out.println("CST for program " + programCounter + ": skipped CST due to LEXER errors");
                                 }
                                 //If there's still lines in the input file (i.e. there's still programs to lex through), print a message saying so
                                 if(tokenList.hasNextLine()) {
@@ -237,14 +246,14 @@ public class Lexer {
                             break;
                             //Open quotes indicator
                             case '\'':
-                                //handleToken(list, "CHAR", "\'", lineCounter, counter, programCounter);
+                                handleToken(list, "OPENSTRING", "\'", lineCounter, counter, programCounter);
                                 counter++;
                                 stringolon = "";
                                 inAString = true;
                             break;
                             //Open quotes indicator
                             case '\"':
-                                //handleToken(list, "CHAR", "\"", lineCounter, counter, programCounter);
+                                handleToken(list, "OPENSTRING", "\"", lineCounter, counter, programCounter);
                                 counter++;
                                 stringolon = "";
                                 inAString = true;
