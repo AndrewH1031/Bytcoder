@@ -3,5 +3,5 @@
     a = a
     string b
     a = b
-    print
+    print(a)
 }$
