@@ -26,11 +26,7 @@ public class Parser {
     int parseCounter = 0; //for counting each token in the list, one by one
     String currentToken;
 
-    //My godforsaken 4 year old laptop cannot run this thing in the command prompt to save its life, so please bear with me as I lose my mind trying to update it fruitlessly
-
-    //nvm figured it out, just make a new copy of it locally and run it there
-    //don't actually change anything, just use the file to run stuff
-    //delete when done, repeat ad nauseum - this method is so stupid and genuinely shouldn't work but it does and I don't care anymore
+    //NOTE: code is currently VERY rough right now, will make sure it's working in future commits
 
     public void main(ArrayList<Token> list) {
         parseList = list;
@@ -63,7 +59,7 @@ public class Parser {
     public void parseStatementList() {
         System.out.println("parse statement list");
         currentToken = parseList.get(parseCounter).tokenType;
-        //System.out.println(currentToken);
+        System.out.println(currentToken);
         if(currentToken == "PRINTSTATEMENT" || currentToken == "ID" || currentToken == "WHILESTATEMENT" || currentToken == "IFSTATEMENT" || currentToken == "OPEN_BLOCK" || currentToken == "TYPEINT" || currentToken == "TYPESTRING" || currentToken == "TYPEBOOL") {
             //System.out.println("token here?");
 
@@ -81,34 +77,27 @@ public class Parser {
         switch(currentToken) {
             case("OPEN_BLOCK"):
                 handleParseToken("OPEN_BLOCK", "parseBlock()");
-                parseCounter++;
             break;
             case("PRINTSTATEMENT"):
                 parsePrint();
             break;
             case("IFSTATEMENT"):
                 parseIf();
-                parseCounter++;
             break;
             case("WHILESTATEMENT"):
                 parseWhile();
-                parseCounter++;
             break; 
             case("ID"):
-                parseID();
-                parseCounter++;
+                parseAssign();
             break;
             case("TYPEINT"):
                 parseVarDecl();
-                parseCounter++;
             break;
             case("TYPESTRING"):
                 parseVarDecl();
-                parseCounter++;
             break;
             case("TYPEBOOL"):
                 parseVarDecl();
-                parseCounter++;
             break;
         }
         //ignore this stuff for nows
@@ -123,13 +112,9 @@ public class Parser {
     public void parsePrint() {
         handleParseToken("PRINTSTATEMENT", "parsePrintStatement()");
         //add parseCount to handleParseToken please and thank you
-        parseCounter++;
         handleParseToken("OPEN_PAREN", "parseOpenExpression()");
-        parseCounter++;
         parseExpression();
-        parseCounter++;
         handleParseToken("CLOSE_PAREN", "parseCloseExpression()");
-        parseCounter++;
         //May not need these two
         /*parseExpression();
         parseCharList();*/
@@ -138,6 +123,16 @@ public class Parser {
     public void parseAssign() {
         //something here to make sure it's followed up by an = symbol
         //then pass to varDecl?
+        System.out.println("parseAssignStatement()");
+        if(currentToken == "ID") {
+            parseID();
+            handleParseToken("ASSIGNOP", "parseAssignment()");
+            parseExpression();
+        }
+        else {
+            System.out.println("Error! Invalid token here");
+        }
+
     }
 
     public void parseInt() {
@@ -153,12 +148,24 @@ public class Parser {
     public void parseBoolean() {
         //Expression
         System.out.println("parseBoolean()");
-        handleParseToken("OPEN_PAREN", "parseOpenExpression()")
+        handleParseToken("OPEN_PAREN", "parseOpenExpression()");
+        if(currentToken == "OPEN_PAREN") {
+            handleParseToken("OPEN_PAREN", "parseOpenQuote()");
+            parseExpression();
+            parseBoolOp();
+            parseExpression();
+        }
+        else if(currentToken == "BOOLVAL") {
+            parseBoolVal();
+        }
+        else {
+            System.out.println("Error! Invalid token detected here");
+        }
     }
 
     public void parseVarDecl() {
         //Declare type variables here
-        System.out.println("parseVarDeclaration()")
+        System.out.println("parseVarDeclaration()");
         parseTypeCheck();
         parseID();
     }
@@ -166,11 +173,15 @@ public class Parser {
     public void parseIf() {
         handleParseToken("IFSTATEMENT", "parseIfStatement()");
         //add if
+        parseBoolean();
+        parseBlock();
     }
 
     public void parseWhile() {
         handleParseToken("WHILESTATEMENT", "parseWhileStatement()");
         //add while
+        parseBoolean();
+        parseBlock();
     }
 
     public void parseChar() {
@@ -193,9 +204,9 @@ public class Parser {
         //add IDs
     }
 
-    public static void parseTypeCheck() {
+    public void parseTypeCheck() {
         //String, Int, Boolean type checking goes here
-        System.out.println("parseTypeChecking()")
+        System.out.println("parseTypeChecking()");
         if((currentToken == "TYPEINT") || (currentToken == "TYPESTRING") || (currentToken == "TYPEBOOL")) {
             switch(currentToken) {
                 case("TYPEINT"):
@@ -203,10 +214,10 @@ public class Parser {
                     handleParseToken("TYPEINT", "parseInt()");
                 break;
                 case("TYPESTRING"):
-                    handleParseToken("TYPEINT", "parseString()");
+                    handleParseToken("TYPESTRING", "parseString()");
                 break;
                 case("TYPEBOOL"):
-                    handleParseToken("TYPEINT", "parseBoolean()");
+                    handleParseToken("TYPEBOOL", "parseBoolean()");
                 break;
             }
         }
@@ -219,19 +230,22 @@ public class Parser {
     public void parseExpression() {
         //Expressions go here (addition, strings, etc.)
         System.out.println("parseExpression()");
+        //temporary
+        parseCounter++;
+        currentToken = parseList.get(parseCounter).tokenType;
     }
 
-    public static void parseBoolOp() {
+    public void parseBoolOp() {
         //Equals, not equals goes here
         handleParseToken("BOOLOP", "parseBooleanOperand()");
     }
 
-    public static void parseEBoolVal() {
+    public void parseBoolVal() {
         //True, false go here
         handleParseToken("BOOLVAL", "parseBooleanVal()");
     }
 
-    public static void parseAdd() {
+    public void parseAdd() {
         //+ goes here
         handleParseToken("INTOP", "parseIntop()");
     }
@@ -241,13 +255,15 @@ public class Parser {
     //Could possibly change this to accept currentToken instead of being non-static
     public void handleParseToken(String expected, String output) {
         if(currentToken == expected) {
-            System.out.println(expected); //temporary
+            System.out.println("Correct Token! It's " + expected); //temporary
         }
         else {
-            System.out.println("error! wrong token here");
+            System.out.println("error! wrong token here, should be " + expected + ", got " + currentToken);
         }
         //compare expected to given
-        System.out.println("PARSER: " + output);
+        //System.out.println("PARSER: " + output);
+        parseCounter++;
+        currentToken = parseList.get(parseCounter).tokenType;
     }
 
 }
