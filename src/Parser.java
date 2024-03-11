@@ -13,8 +13,8 @@ public class Parser {
 
     public void main(ArrayList<Token> list) {
         parseList = list;
-        currentToken = parseList.get(parseCounter).tokenType;
         parseCounter = 0;
+        currentToken = parseList.get(parseCounter).tokenType;
 
         System.out.println("PARSER: Parser called from LEXER");
         System.out.println();
@@ -110,14 +110,7 @@ public class Parser {
         //Print statement - check for a Print (obviously), then look for both sets of parentheses and an expression
         handleParseToken("PRINTSTATEMENT", "parsePrintStatement()");
         handleParseToken("OPEN_PAREN", "parseOpenExpression()");
-        if(currentToken == "OPENSTR") {
-            handleParseToken("OPENSTR", "parseOpenExpression()");
-            parseExpression();
-            handleParseToken("CLOSESTR", "parseOpenExpression()");
-        }
-        else {
-            parseExpression();
-        }
+        parseExpression();
         handleParseToken("CLOSE_PAREN", "parseCloseExpression()");
     }
 
@@ -132,28 +125,28 @@ public class Parser {
     public void parseInt() {
         System.out.println("PARSER: parseIntExpression()");
         //Expression
-        if(currentToken == "DIGIT") {
+        if(currentToken == "NUM") {
             parseDigit();
             if(currentToken == "INTOP") {
-                parseInt();
+                parseAdd();
                 parseExpression();
             }
         }
         else {
-            error("DIGIT", currentToken);
+            error("NUM", currentToken);
         }
     }
 
     public void parseString() {
         System.out.println("PARSER: parseStringExpression()");
         //Expression
-        if(currentToken == "OPENSTR") {
-            handleParseToken("OPENSTR", currentToken);
+        if(currentToken == "OPENSTRING") {
+            handleParseToken("OPENSTRING", currentToken);
             parseCharList();
-            handleParseToken("CLOSESTR", currentToken);
+            handleParseToken("CLOSESTRING", currentToken);
         }
         else {
-            error("OPENSTR", currentToken);
+            error("OPENSTRING", currentToken);
         }
     }
 
@@ -275,14 +268,20 @@ public class Parser {
         System.out.println("PARSER: parseExpression()");
         
         switch(currentToken) {
-            case("DIGIT"):
+            case("NUM"):
                 parseInt();
             break;
-            case("OPENSTR"):
+            case("OPENSTRING"):
                 parseString();
             break;
             case("ID"):
                 parseID();
+            break;
+            case("OPEN_PAREN"):
+                parseBoolean();
+            break;
+            case("BOOLVAL"):
+                parseBoolVal();
             break;
             default:
                 error("EXPRESSION", currentToken);
