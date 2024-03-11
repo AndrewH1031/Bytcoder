@@ -16,7 +16,7 @@ public class Parser {
         currentToken = parseList.get(parseCounter).tokenType;
         parseCounter = 0;
 
-        System.out.println("by the power of God and Whiteclaw, I conjure forth this Parser!");
+        System.out.println("PARSER: Parser called from LEXER");
         System.out.println();
         System.out.println("Beginning Parser...");
         parse();
@@ -25,26 +25,26 @@ public class Parser {
     }
 
     public void parse() {
-        System.out.println("parseBody()");
+        System.out.println("PARSER: parseBody()");
         parseProgram();
     }
 
     public void parseProgram() {
-        System.out.println("parseProgram()");
+        System.out.println("PARSER: parseProgram()");
         parseBlock();
         //Check for an End-Of-Program symbol
         handleParseToken("EOP_BLOCK", "parseEndOfProgram()");
         if(endTheDamnThing == true) {
             if(errors > 0) {
                 System.out.println();
-                System.out.println("PARSER: Parser failed with " + errorCount + "errors");
+                System.out.println("PARSER: Parser failed with " + errors + " errors");
                 System.out.println("PARSER: CST skipped due to PARSER error(s)");
             }
             else {
                 System.out.println();
-                System.out.println("PARSER: Parsing completed successfully")
+                System.out.println("PARSER: Parsing completed successfully");
                 System.out.println("PARSER: Printing CST...");
-                //Call CST print function
+                CST();
 
                 //Semantic analyzer call here for the future
             }
@@ -52,7 +52,7 @@ public class Parser {
     }
 
     public void parseBlock() {
-        System.out.println("parseBlock()");
+        System.out.println("PARSER: parseBlock()");
         handleParseToken("OPEN_BLOCK", "parseBlock()");
         parseStatementList();
         //Use this to check for the complementary close block token
@@ -60,7 +60,7 @@ public class Parser {
     }
 
     public void parseStatementList() {
-        System.out.println("parseStatementList()");
+        System.out.println("PARSER: parseStatementList()");
         currentToken = parseList.get(parseCounter).tokenType;
         //System.out.println(currentToken);
         if(currentToken == "PRINTSTATEMENT" || currentToken == "ID" || currentToken == "WHILESTATEMENT" || currentToken == "IFSTATEMENT" || currentToken == "OPEN_BLOCK" || currentToken == "TYPEINT" || currentToken == "TYPESTRING" || currentToken == "TYPEBOOL") {
@@ -71,7 +71,7 @@ public class Parser {
     }
 
     public void parseStatement() {
-        System.out.println("parseStatement()");
+        System.out.println("PARSER: parseStatement()");
         //add if/case statements depending on what kind of token
         switch(currentToken) {
             case("OPEN_BLOCK"):
@@ -116,19 +116,19 @@ public class Parser {
 
     public void parseAssign() {
         //Assignment statement - check for an existing ID to declare, then search for a BoolOp and then finally pass it to Expression() to find what we want to declare it to
-        System.out.println("parseAssignStatement()");
+        System.out.println("PARSER: parseAssignStatement()");
         parseID();
         handleParseToken("ASSIGNOP", "parseAssignment()");
         parseExpression();
     }
 
     public void parseInt() {
-        System.out.println("parseIntExpression()")
+        System.out.println("PARSER: parseIntExpression()");
         //Expression
         if(currentToken == "DIGIT") {
             parseDigit();
             if(currentToken == "INTOP") {
-                parseIntOp();
+                parseInt();
                 parseExpression();
             }
         }
@@ -138,7 +138,7 @@ public class Parser {
     }
 
     public void parseString() {
-        System.out.println("parseStringExpression()");
+        System.out.println("PARSER: parseStringExpression()");
         //Expression
         if(currentToken == "OPENSTR") {
             handleParseToken("OPENSTR", currentToken);
@@ -152,7 +152,7 @@ public class Parser {
 
     public void parseBoolean() {
         //Boolean initialization - we need this for our while and if statements to work
-        System.out.println("parseBoolean()");
+        System.out.println("PARSER: parseBoolean()");
         handleParseToken("OPEN_PAREN", "parseOpenExpression()");
         //If we have an open paren, then that means our statement is valid - call to handle open paren, then parse through both expressions and the boolop in between
         if(currentToken == "OPEN_PAREN") {
@@ -169,7 +169,7 @@ public class Parser {
             else {
                 parseExpression();
             }
-            handleToken("CLOSE_PAREN", "parseCloseParen()")
+            handleParseToken("CLOSE_PAREN", "parseCloseParen()");
         }
         //If we don't find anything relevant (i.e. open paren token), print an error
         else {
@@ -178,7 +178,7 @@ public class Parser {
     }
 
     public void parseVarDecl() {
-        System.out.println("parseVarDeclaration()");
+        System.out.println("PARSER: parseVarDeclaration()");
         //Double check ourselves to make sure we've got a Type on our hands
         parseTypeCheck();
         //...then add the ID we want to declare
@@ -226,7 +226,7 @@ public class Parser {
             //Nothing here...
         }
     }
-
+ 
     public void parseDigit() {
         //add a Digit
         handleParseToken("NUM", "parseDigit()");
@@ -239,7 +239,7 @@ public class Parser {
 
     public void parseTypeCheck() {
         //String, Int, Boolean type checking to make extra sure we've got something to declare
-        System.out.println("parseTypeChecking()");
+        System.out.println("PARSER: parseTypeChecking()");
         if((currentToken == "TYPEINT") || (currentToken == "TYPESTRING") || (currentToken == "TYPEBOOL")) {
             switch(currentToken) {
                 //Declare an Int
@@ -266,7 +266,7 @@ public class Parser {
 
     public void parseExpression() {
         //Expressions go here (addition, strings, etc.)
-        System.out.println("parseExpression()");
+        System.out.println("PARSER: parseExpression()");
         
         switch(currentToken) {
             case("DIGIT"):
@@ -275,16 +275,13 @@ public class Parser {
             case("OPENSTR"):
                 parseString();
             break;
+            case("ID"):
+                parseID();
+            break;
             default:
                 error("EXPRESSION", currentToken);
             break;
         }
-
-        //ROUGH IDEA FOR THIS:
-        //We need to use this for processing stuff in parentheses
-        //Check for parentheses first
-        //Detect open strings, numbers and IDs
-        //Print error as usual if stuff doesn't match
     }
 
     public void parseBoolOp() {
@@ -302,8 +299,8 @@ public class Parser {
         handleParseToken("INTOP", "parseIntop()");
     }
     
-    public void CST(String expectedCST) {
-        CST.add(expectedCST);
+    public void CST() {
+        System.out.println("IOU one CST, mmmkay");
     }
 
     public void printCST() {
@@ -319,11 +316,12 @@ public class Parser {
                 //DON'T increment parseCounter here - it's the end of the program, there's nothing else left to read!
             }
             else {
-                System.out.println("PARSER: Correct Token! It's " + expected); //temporary
+                System.out.println("Correct Token! It's " + expected); //temporary
                 parseCounter++;
             }
         }
         else {
+            System.out.println("oh no!");
             error(expected, currentToken);
             parseCounter++;
         }
