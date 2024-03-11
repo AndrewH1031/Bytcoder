@@ -1,25 +1,6 @@
 import java.util.ArrayList;
 
 public class Parser {
-
-    /*
-    We need:
-    - parse
-    - parse program
-    - parse block
-    - parse statement list
-    - parse statement
-    - parse print
-    - parse assign
-    - parse if, while
-    - parse int, string, bool (types)
-    - parse digits, characters, id
-    - parse string (add stuff in lexer for this)
-    - parse expressions (including bool)
-    - parse boolops, boolvals
-    - parse addition
-    - parse var declaration
-     */
     
     ArrayList<String> CST = new ArrayList<>(); //This is a list for now, will likely upgrade into a full tree eventually
     ArrayList<Token> parseList;
@@ -28,7 +9,7 @@ public class Parser {
     String currentToken;
     boolean endTheDamnThing = false;
 
-    //NOTE: code is currently VERY rough right now, will make sure it's working in future commits
+    //NOTE: code is currently a little rough right now, everything aside from expressions work fine
 
     public void main(ArrayList<Token> list) {
         parseList = list;
@@ -142,13 +123,31 @@ public class Parser {
     }
 
     public void parseInt() {
-        handleParseToken("TYPEINT", "parseInt()");
+        System.out.println("parseIntExpression()")
         //Expression
+        if(currentToken == "DIGIT") {
+            parseDigit();
+            if(currentToken == "INTOP") {
+                parseIntOp();
+                parseExpression();
+            }
+        }
+        else {
+            error("DIGIT", currentToken);
+        }
     }
 
     public void parseString() {
-        handleParseToken("TYPESTRING", "parseString()");
+        System.out.println("parseStringExpression()");
         //Expression
+        if(currentToken == "OPENSTR") {
+            handleParseToken("OPENSTR", currentToken);
+            parseCharList();
+            handleParseToken("CLOSESTR", currentToken);
+        }
+        else {
+            error("OPENSTR", currentToken);
+        }
     }
 
     public void parseBoolean() {
@@ -157,17 +156,20 @@ public class Parser {
         handleParseToken("OPEN_PAREN", "parseOpenExpression()");
         //If we have an open paren, then that means our statement is valid - call to handle open paren, then parse through both expressions and the boolop in between
         if(currentToken == "OPEN_PAREN") {
-            //while(expr == expr/boolop) {
-            handleParseToken("OPEN_PAREN", "parseOpenQuote()");
+            //while(expr == expr/boolval) {
+            handleParseToken("OPEN_PAREN", "parseOpenParen()");
             //Include expression functionality before tweaking this order
             parseExpression();
             parseBoolOp();
-            parseExpression(); //if boolval then handle boolval; else expression??
-        }
-        //Else if we've got a BoolVal (through parsing through an existing if/while statement), then initialize it
-        //Can likely just merge this with the main open paren statement
-        else if(currentToken == "BOOLVAL") {
-            parseBoolVal();
+            //If we've got a BoolVal (through parsing through an existing if/while statement), then initialize it
+            if(currentToken == "BOOLVAL") {
+                parseBoolVal();
+            }
+            //Else, it's just a regular ol' expression - shove it in there
+            else {
+                parseExpression();
+            }
+            handleToken("CLOSE_PAREN", "parseCloseParen()")
         }
         //If we don't find anything relevant (i.e. open paren token), print an error
         else {
@@ -203,9 +205,26 @@ public class Parser {
         handleParseToken("CHAR", "parseChar()");
     }
 
+    public void parseSpace() {
+        handleParseToken("CHARSPACE", "parseSpace()");
+    }
+
     public void parseCharList() {
-        //Check to see if we have a valid char for our current string (i.e. if it's considered a char, NOT an id in the token list)
-        //Need to be able to detect string starts(open quotes) in lexer first
+        //Check to see if we have a valid char for our current string (i.e. if it's considered a char or charspace, NOT an id in the token list)
+        //Once we have our character, loop back to charlist to parse for more chars
+        System.out.println("parseCharList()");
+        if(currentToken == "CHAR") {
+            parseChar();
+            parseCharList();
+        }
+        //Finally doing stuff with our space tokens
+        else if(currentToken == "CHARSPACE") {
+            parseSpace();
+            parseCharList();
+        }
+        else {
+            //Nothing here...
+        }
     }
 
     public void parseDigit() {
@@ -248,9 +267,18 @@ public class Parser {
     public void parseExpression() {
         //Expressions go here (addition, strings, etc.)
         System.out.println("parseExpression()");
-        //temporary
-        parseCounter++;
-        currentToken = parseList.get(parseCounter).tokenType;
+        
+        switch(currentToken) {
+            case("DIGIT"):
+                parseInt();
+            break;
+            case("OPENSTR"):
+                parseString();
+            break;
+            default:
+                error("EXPRESSION", currentToken);
+            break;
+        }
 
         //ROUGH IDEA FOR THIS:
         //We need to use this for processing stuff in parentheses
@@ -274,6 +302,13 @@ public class Parser {
         handleParseToken("INTOP", "parseIntop()");
     }
     
+    public void CST(String expectedCST) {
+        CST.add(expectedCST);
+    }
+
+    public void printCST() {
+        //for length of CST, print i or smth
+    }
     //Print CST here????
 
     //Could possibly change this to accept currentToken instead of being non-static
