@@ -1,0 +1,15 @@
+{
+    int a
+    a = a
+    string b
+    a = b
+    print(a)
+}$
+{{
+string a
+string b
+if(a = b) {
+print("yay")
+}
+a = b
+}}$
