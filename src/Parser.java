@@ -110,7 +110,14 @@ public class Parser {
         //Print statement - check for a Print (obviously), then look for both sets of parentheses and an expression
         handleParseToken("PRINTSTATEMENT", "parsePrintStatement()");
         handleParseToken("OPEN_PAREN", "parseOpenExpression()");
-        parseExpression();
+        if(currentToken == "OPENSTR") {
+            handleParseToken("OPENSTR", "parseOpenExpression()");
+            parseExpression();
+            handleParseToken("CLOSESTR", "parseOpenExpression()");
+        }
+        else {
+            parseExpression();
+        }
         handleParseToken("CLOSE_PAREN", "parseCloseExpression()");
     }
 
@@ -153,7 +160,6 @@ public class Parser {
     public void parseBoolean() {
         //Boolean initialization - we need this for our while and if statements to work
         System.out.println("PARSER: parseBoolean()");
-        handleParseToken("OPEN_PAREN", "parseOpenExpression()");
         //If we have an open paren, then that means our statement is valid - call to handle open paren, then parse through both expressions and the boolop in between
         if(currentToken == "OPEN_PAREN") {
             //while(expr == expr/boolval) {
