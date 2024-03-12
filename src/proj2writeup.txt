@@ -1,0 +1,31 @@
+Andrew Hatch - CMPT432N Compilers
+
+=== Project 2 Test Cases Writeup ===
+
+Lexer has undergone a few small tweaks since we last saw it - It's now capable of recognizing open and close quote tokens, and can
+recognize space characters in strings as well.
+
+parseTest.txt:
+Fairly standard example program from the numerous example test cases you gave us, reformatted to accept current grammar. Under normal circumstances the 
+print function would have returned an error if it were left by itself like in the original code, so I modified it so it can accept an ID, which does
+let it work. With this tweak, everything works perfectly.
+
+parseTest2.txt:
+Now we're getting into the good stuff - there's a lot to unpack here, so I'll guide you through it step-by-step:
+First program is gramatically correct, print statement accepts a string (which it can do) and it's followed up by an if statement. This statement
+expresses typical formatting, with a set of parentheses and an ID, BoolOp and BoolVal token following it in sequence. If we have a number, we can plug it
+into this sort of statement, with the same result (since we haven't done semantic analysis yet).
+Second program is a bit weird with the formatting but otherwise parses fine. We use print to express our IntOp dreams, which is nicely nestled inside our previous if statement.
+The last two programs are essentially the same thing - we can show off our IntOp expressions a bit, notably that they can be placed immediately after type declarations.
+None of these programs up until now have thrown an error (if they have, you're doing something wrong), but that all changes once we get into our next program...
+
+moreParseTest.txt
+Alright, here's the ugly code of the bunch: starting off with programs 1 and 2, they will both parse correctly, despite both being on the same line. Additionally, we can see the inclusion of 
+both types of print statements, including and not including strings. We also have an example of a proper IntOp expression, despite i not being declared before.
+Program 3 will instantly throw an open block error; This is because we're declaring a variable first, then setting immediately trying to send it to an assign statement.
+This isn't possible for our grammar - we need to give our declarations room to breath! On top of this, there's also a lex error preventing us from even reaching this far - the string
+accepted two digits (2 and 4 in 24), which are strictly banned from our grammar. From this, we can see the two types of errors in both lexer and parser, and how we can handle them.
+Much like prog 3, Program 4 has a cheeky string close error preventing us from accessing the parser. Even if we do fix it, though, we can't exactly put an if next to a while without
+some consequences. Throw an error expecting an open paren and don't print our CST.
+Last program is cheeky, and designed to throw you off - we can put multiple boolean expressions inside of themselves so long as we format them properly, leading to stuff like
+the print token being correctly nestled inside both an if and a while statement! Just make sure to include the close quote tokens at the end.
