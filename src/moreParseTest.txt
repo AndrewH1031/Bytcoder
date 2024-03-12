@@ -1,0 +1,4 @@
+{i=1+iprint(s)}${print("ugly code")}$
+{inti=b print("24 yellow bananas")}$
+{ifwhile(a==false){print(a")}}$
+{if(b==true){while(f==true){print("yes")}}}$
