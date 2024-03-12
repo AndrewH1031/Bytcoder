@@ -117,7 +117,7 @@ public class Lexer {
                         }
 
                         //If our current character is a valid character (i.e. a letter or single/double quotes) then print it out
-                        else if((stringolon.matches(("[a-z]+")))) {
+                        else if((stringolon.matches(("[a-z ]+")))) {
                             if(symbolon == ' ') {
                                 //Do nothing, we want to process whitespace for now
                                 //HAHAHAHA I LIED!!!! We want to process it ONLY if it's in a string!
@@ -139,10 +139,8 @@ public class Lexer {
                         }
                         //If we're at the end of our current line and we don't have our quote pair token (AND our current token isn't the pair token), print an error
                         if((string.length() == i + 1) && (string.charAt(i) != '\"')) {
-                            System.out.println("WARNING LEXER - Warning: " + lineCounter + " : " + counter + " String Never Closed; Process Auto-Closed String Statement");
+                            System.out.println("WARNING LEXER - Warning: " + lineCounter + " : " + counter + " String Never Closed");
                             warnings++;
-                            //Force close the string
-                            inAString = false;
                             counter++;
                         }
                         stringolon = "";
