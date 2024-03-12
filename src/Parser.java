@@ -41,6 +41,8 @@ public class Parser {
                 System.out.println("PARSER: Parser failed with " + errors + " errors");
                 System.out.println("PARSER: CST skipped due to PARSER error(s)");
                 errors = 0;
+                CST.clear();
+                cstDepth.clear();
             }
             else {
                 System.out.println();
@@ -48,6 +50,8 @@ public class Parser {
                 System.out.println("PARSER: Printing CST for Program " + parseList.get(parseCounter).progNum + "...");
                 CST();
                 errors = 0;
+                CST.clear();
+                cstDepth.clear();
 
                 //Semantic analyzer call here for the future
             }
@@ -57,6 +61,8 @@ public class Parser {
             System.out.println("PARSER: Parser failed with " + errors + " errors");
             System.out.println("PARSER: CST skipped due to PARSER error(s)");
             errors = 0;
+            CST.clear();
+            cstDepth.clear();
             }
         }
 
