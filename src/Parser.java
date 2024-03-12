@@ -1,14 +1,18 @@
+//A quick shoutout to StackOverflow for giving me an understanding of the general structure of a recursive descent parser:
+//      https://stackoverflow.com/questions/14913804/recursive-descent-parser-in-java
+//And for teaching me how to format recursive descent depth properly:
+//      https://stackoverflow.com/questions/28507978/recursion-depth-tabs-dents-in-java
+
 import java.util.ArrayList;
 
 public class Parser {
     
     ArrayList<String> CST = new ArrayList<>(); //This is a list for now, will likely upgrade into a full tree eventually
-    ArrayList<Integer> cstDepth = new ArrayList<>();
+    ArrayList<Integer> cstDepth = new ArrayList<>(); //Depth of each of our CST tokens, dutifully calculated before handling each one
     ArrayList<Token> parseList; //List for storing our parse variables, we want to use these to print our CST later
     int parseCounter = 0; //for counting each token in the list, one by one
     int errors = 0; //Error count, tracks how many errors we happen to run into in our Parsing process. Program will refuse to print CST if there's any errors
     int depth = 0; //Random variable that we increase/decrease to print out in our CST. Usually is incremented before a program starts and decremented after it finishes
-    int progCount = 0; //Program counter
     String currentToken; //The current token we want to match up
     String nextToken; //The next token in line, used for finding proper tokens in sequence in stuff like IntOp
     boolean endTheDamnThing = false; //If this is true, end our program and print the CST if we have no errors. Only found if we parse through an EOP token
@@ -16,17 +20,16 @@ public class Parser {
     //NOTE: code currently works fine, however it MAY get a little wonky when Lexing multiple long programs at a time. You can usually fix this by just rerunning the program in a new command prompt window, or running them separately
 
     //Some rules for this parser:
-    //1. Print statements MUST have at least one string as part of their declaration, so be sure to include a set of (" ") when printing things
+    //1. Print/if/while statements MUST have at least one pair of parentheses as part of their declaration, so be sure to include a set of () when calling these
     //2. Boolean statements when comparing things naturally need a boolop token (== or !=), don't use a lone = for boolops or else you'll just get an error since that's considered an assignment token
     //3. IDs don't need to be declared by any variable, but it would be very nice of you to :)
     //4. Parser can currently only accept one number at a time (no double digits, like 12) - keep this in mind when assigning or using IntOps
 
     public void main(ArrayList<Token> list) {
         parseList = list; //set parseList equal to the list in our Lexer for comparison purposes
-        parseCounter = 0;
-        depth = 0;
-        currentToken = parseList.get(parseCounter).tokenType;
-        progCount++;
+        parseCounter = 0; //Reset parseCounter between lexer cals
+        depth = 0; //Reset depth between lexer calls
+        currentToken = parseList.get(parseCounter).tokenType; //Set current token to the first element in our borrowed list
 
         System.out.println("PARSER: PARSER called from LEXER");
         System.out.println();
@@ -35,11 +38,13 @@ public class Parser {
 
     }
 
+    //Main parse function - to be honest, this is just here to print out the parser statement and move on
     public void parse() {
         System.out.println("PARSER: parseBody()");
         parseProgram();
     }
 
+    //Parses through our program by calling Block() (which is what every statement should start with), and then finally compares the output to see if we have errors
     public void parseProgram() {
         System.out.println("PARSER: parseProgram()");
         addCST("Program", depth);
@@ -53,18 +58,21 @@ public class Parser {
                 System.out.println();
                 System.out.println("PARSER: Parser failed with " + errors + " errors");
                 System.out.println("PARSER: CST skipped due to PARSER error(s)");
+                errors = 0;
             }
             else {
                 System.out.println();
                 System.out.println("PARSER: Parsing completed successfully");
                 System.out.println("PARSER: Printing CST for Program " + parseList.get(parseCounter).progNum + "...");
                 CST();
+                errors = 0;
 
                 //Semantic analyzer call here for the future
             }
         }
     }
 
+    //Find a block statement to parse off of, then match a corresponding close block token when we're finished
     public void parseBlock() {
         System.out.println("PARSER: parseBlock()");
         addCST("Block", depth);
@@ -76,6 +84,7 @@ public class Parser {
         depth--;
     }
 
+    //If we've got a proper token to start off our statement, then let it in. Otherwise, this is where our program stops
     public void parseStatementList() {
         System.out.println("PARSER: parseStatementList()");
         addCST("Statement List", depth);
@@ -93,12 +102,14 @@ public class Parser {
         depth--;
     }
 
+    //More in-depth token searching than statementList(), this time we want to find a parsing home for all of our promising token candidates
     public void parseStatement() {
         System.out.println("PARSER: parseStatement()");
         addCST("Statement", depth);
         depth++;
-        //add if/case statements depending on what kind of token we have
+        //Case statement depending on what kind of token we have
         switch(currentToken) {
+            //Can add nested block statements through this
             case("OPEN_BLOCK"):
                 parseBlock();
                 depth--;
@@ -170,9 +181,10 @@ public class Parser {
     }
 
     //Parses an Integer exression, which checks for an open parentheses before either initializing a number or parsing an IntOp expression
-    //This is the only way we want to 
+    //This is the only way we want to initialize digits and intop statements
     public void parseInt() {
 
+        //Set nextToken to currentToken + 1
         if(parseList.size() - 1 > parseCounter + 1) {
             nextToken = parseList.get(parseCounter + 1).tokenType;
         }
@@ -182,7 +194,7 @@ public class Parser {
         depth++;
         if(currentToken == "NUM") {
             parseDigit();
-            //Use forward pointer to fix this
+            //If we've got an IntOp after our num, we can assume it's addition - go ahead and parse it
             if(nextToken == "INTOP") {
                 parseAdd();
                 parseExpression();
@@ -222,6 +234,7 @@ public class Parser {
             parseExpression();
             parseBoolOp();
 
+            //Set nextToken to currentToken + 1
             if(parseList.size() - 1 > parseCounter + 1) {
                 nextToken = parseList.get(parseCounter + 1).tokenType;
             }
@@ -234,10 +247,11 @@ public class Parser {
             else {
                 parseExpression();
             }
+            //Check for a complementary close paren token at the end of our shenanigans
             handleParseToken("CLOSE_PAREN", "parseCloseParen()");
             depth--;
         }
-        //If we don't find anything relevant (i.e. open paren token), print an error
+        //If we don't find anything relevant (i.e. no open paren token), print an error
         else {
             error("OPEN_PAREN", currentToken);
         }
@@ -309,7 +323,7 @@ public class Parser {
             depth--;
         }
         else {
-            error("CHAR", currentToken);
+            //Do nothing...We DON'T want to throw an error here, since that will gum things up
         }
     }
 
@@ -426,18 +440,22 @@ public class Parser {
     public void CST() {
         System.out.println();
 
+        //For each token stored in the CST, print it out and pad it with leading "-" symbols depending on its depth
         for(int i = 0; i < CST.size(); i++) {
             String printToken = CST.get(i);
             String depthPadded = padDepth(cstDepth.get(i));
             System.out.println(depthPadded + printToken);
         }
 
+        //Clear our lists for future use
         CST.clear();
         cstDepth.clear();
     }
 
+    //Method to pad our CST depending on each entry's depth
     public String padDepth(int depthToBePadded) {
         String filler = "";
+        //If depth = 7, will add 7 "-" symbols to the filler list
         for (int i = 0; i < depthToBePadded; i++) {
             filler = filler + "-";
         }
@@ -481,5 +499,4 @@ public class Parser {
         errors++;
         parseCounter++;
     }
-
 }
