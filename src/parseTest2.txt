@@ -1,15 +1,6 @@
-{
-    int a
-    a = a
-    string b
-    a = b
-    print(a)
+{print ("two lines")if(a==false){ int aa = bb=c}
+int cif(c==false){print(2+2)}
+
 }$
-{{
-string a
-string b
-if(a == b) {
-print("yay")
-}
-a = b
-}}$
+{intii=1+i}$
+{i=2+2}$
