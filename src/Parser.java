@@ -3,9 +3,11 @@ import java.util.ArrayList;
 public class Parser {
     
     ArrayList<String> CST = new ArrayList<>(); //This is a list for now, will likely upgrade into a full tree eventually
+    ArrayList<Integer> cstDepth = new ArrayList<>();
     ArrayList<Token> parseList; //List for storing our parse variables, we want to use these to print our CST later
     int parseCounter = 0; //for counting each token in the list, one by one
     int errors = 0; //Error count, tracks how many errors we happen to run into in our Parsing process. Program will refuse to print CST if there's any errors
+    int depth = 0;
     String currentToken; //The current token we want to match up
     String nextToken; //The next token in line, used for finding proper tokens in sequence in stuff like IntOp
     boolean endTheDamnThing = false; //If this is true, end our program and print the CST if we have no errors. Only found if we parse through an EOP token
@@ -15,6 +17,7 @@ public class Parser {
     public void main(ArrayList<Token> list) {
         parseList = list; //set parseList equal to the list in our Lexer for comparison purposes
         parseCounter = 0;
+        depth = 0;
         currentToken = parseList.get(parseCounter).tokenType;
 
         System.out.println("PARSER: PARSER called from LEXER");
@@ -53,6 +56,7 @@ public class Parser {
 
     public void parseBlock() {
         System.out.println("PARSER: parseBlock()");
+        addCST("Block", depth);
         handleParseToken("OPEN_BLOCK", "parseBlock()");
         parseStatementList();
         //Use this to check for the complementary close block token
@@ -61,6 +65,7 @@ public class Parser {
 
     public void parseStatementList() {
         System.out.println("PARSER: parseStatementList()");
+        addCST("Statement List", depth);
         //Update our current token based on the position of the pointer
         currentToken = parseList.get(parseCounter).tokenType;
         //System.out.println(currentToken);
@@ -75,6 +80,7 @@ public class Parser {
 
     public void parseStatement() {
         System.out.println("PARSER: parseStatement()");
+        addCST("Statement", depth);
         //add if/case statements depending on what kind of token we have
         switch(currentToken) {
             case("OPEN_BLOCK"):
@@ -113,6 +119,7 @@ public class Parser {
     //Print statement - check for a Print (obviously), then look for both sets of parentheses and an expression
     public void parsePrint() {
         handleParseToken("PRINTSTATEMENT", "parsePrintStatement()");
+        addCST("Print Statement", depth);
         if(currentToken == "OPEN_PAREN") {
             handleParseToken("OPEN_PAREN", "parseOpenExpression()");
             parseExpression();
@@ -129,6 +136,7 @@ public class Parser {
     public void parseAssign() {
        
         System.out.println("PARSER: parseAssignStatement()");
+        addCST("Assignment", depth);
         parseID();
         handleParseToken("ASSIGNOP", "parseAssignment()");
         parseExpression();
@@ -143,6 +151,7 @@ public class Parser {
         }
 
         System.out.println("PARSER: parseIntExpression()");
+        addCST("Integer Expression", depth);
         if(currentToken == "NUM") {
             parseDigit();
             //Use forward pointer to fix this
@@ -159,6 +168,7 @@ public class Parser {
     //Parses a string expression, which checks for an open quote token before parsing through the whole list of characters (or spaces) and then ending things off with a close string token
     public void parseString() {
         System.out.println("PARSER: parseStringExpression()");
+        addCST("String Expression", depth);
         if(currentToken == "OPENSTRING") {
             handleParseToken("OPENSTRING", currentToken);
             parseCharList();
@@ -172,6 +182,7 @@ public class Parser {
     public void parseBoolean() {
         //Boolean initialization - we need this for our while and if statements to work
         System.out.println("PARSER: parseBoolean()");
+        addCST("Boolean", depth);
         //If we have an open paren, then that means our statement is valid - call to handle open paren, then parse through both expressions and the boolop in between
         if(currentToken == "OPEN_PAREN") {
             //while(expr == expr/boolval) {
@@ -200,6 +211,7 @@ public class Parser {
 
     public void parseVarDecl() {
         System.out.println("PARSER: parseVarDeclaration()");
+        addCST("Variable Declaration", depth);
         //Double check ourselves to make sure we've got a Type on our hands
         parseTypeCheck();
         //...then add the ID we want to declare
@@ -209,6 +221,7 @@ public class Parser {
     public void parseIf() {
         //If statement: initialize if, then pass to Boolean() to determine what to do with the following parentheses, and then Block() to make sure we have an open bracket following too
         handleParseToken("IFSTATEMENT", "parseIfStatement()");
+        addCST("If Statement", depth);
         parseBoolean();
         parseBlock();
     }
@@ -216,6 +229,7 @@ public class Parser {
     public void parseWhile() {
         //While statement: pretty much like if
         handleParseToken("WHILESTATEMENT", "parseWhileStatement()");
+        addCST("While Statement", depth);
         parseBoolean();
         parseBlock();
     }
@@ -224,17 +238,20 @@ public class Parser {
         //add a Character (ID part of string)
         //Need to add string functionality to lexer first
         handleParseToken("CHAR", "parseChar()");
+        addCST("Character", depth);
     }
 
     public void parseSpace() {
         //Parse out space tokens, which can only be found in strings initialized in our lexer
         handleParseToken("CHARSPACE", "parseSpace()");
+        addCST("Whitespace", depth);
     }
 
     public void parseCharList() {
         //Check to see if we have a valid char for our current string (i.e. if it's considered a char or charspace, NOT an id in the token list)
         //Once we have our character, loop back to charlist to parse for more chars
         System.out.println("parseCharList()");
+        addCST("Character List", depth);
         if(currentToken == "CHAR") {
             parseChar();
             parseCharList();
@@ -252,6 +269,7 @@ public class Parser {
     public void parseTypeCheck() {
         //String, Int, Boolean type checking to make extra sure we've got something to declare
         System.out.println("PARSER: parseTypeChecking()");
+        addCST("Type Checking", depth);
         if((currentToken == "TYPEINT") || (currentToken == "TYPESTRING") || (currentToken == "TYPEBOOL")) {
             switch(currentToken) {
                 //Declare an Int
@@ -309,37 +327,58 @@ public class Parser {
 
     //Adds a Digit
     public void parseDigit() {
+        addCST("Digit", depth);
         handleParseToken("NUM", "parseDigit()");
     }
 
     //Adds an ID
     public void parseID() {
+        addCST("ID", depth);
         handleParseToken("ID", "parseID()");
     }
 
     //Adds a BoolOp (==, !=) here - these will be our main comparison tools inside expressions
     public void parseBoolOp() {
+        addCST("Boolean Operand", depth);
         handleParseToken("BOOLOP", "parseBooleanOperand()");
     }
 
     //Adds a Boolean value (true, false)
     public void parseBoolVal() {
+        addCST("Boolean Value", depth);
         handleParseToken("BOOLVAL", "parseBooleanVal()");
     }
 
     //Adds an IntOp (addition) symbol
     public void parseAdd() {
+        addCST("Integer Operation", depth);
         handleParseToken("INTOP", "parseIntop()");
     }
     
     //Our Concrete Syntax Tree, which we want to print out at the end of our program. Accepts the info from addCST, and then formats and prints it out
     public void CST() {
         System.out.println("IOU one CST, mmmkay");
+
+        for(int i = 0; i < CST.size(); i++) {
+            String printToken = CST.get(i);
+            String depthPadded = padDepth(cstDepth.get(i));
+            System.out.println(depthPadded + printToken);
+        }
+    }
+
+    public String padDepth(int depthToBePadded) {
+        String filler = "";
+        for (int i = 0; i < depthToBePadded; i++) {
+            filler = filler + "-";
+        }
+        return filler;
     }
 
     //Method to add stuff to our CST - accepts current token and its place in the program, then adds it to its corresponding list
-    public void addCST() {
+    public void addCST(String tokenInCST, int tokenDepth) {
         //temporary
+        CST.add(tokenInCST);
+        cstDepth.add(tokenDepth);
     }
 
     //Could possibly change this to accept currentToken instead of being non-static
@@ -350,8 +389,9 @@ public class Parser {
                 endTheDamnThing = true;
                 //DON'T increment parseCounter here - it's the end of the program, there's nothing else left to read!
             }
-            //Else it's just a regular token, handle it
+            //Else it's just a regular token, handle it and add to the CST
             else {
+                addCST(currentToken, depth);
                 System.out.println("Correct Token! It's " + expected); //temporary
                 parseCounter++;
             }
