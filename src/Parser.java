@@ -62,6 +62,7 @@ public class Parser {
 
     //Main parse function - to be honest, this is just here to print out the parser statement and move on
     public void parse() {
+        //If we've got any error at all, just do nothing. This will filter the parser so it will only print what came before the error
         if(errors > 0) {
             //Do nothing
         }
@@ -565,7 +566,7 @@ public class Parser {
         for(int i = 0; i < CST.size(); i++) {
             String printToken = CST.get(i);
             String depthPadded = padDepth(cstDepth.get(i));
-            System.out.println(depthPadded + printToken);
+            System.out.println(depthPadded + "<" + printToken + ">");
         }
 
         //Clear our lists for future use
