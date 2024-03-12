@@ -35,6 +35,23 @@ public class Parser {
         System.out.println();
         System.out.println("Beginning Parser...");
         parse(); //Call our parser to begin parsing
+        if(endTheDamnThing == true) {
+            if(errors > 0) {
+                System.out.println();
+                System.out.println("PARSER: Parser failed with " + errors + " errors");
+                System.out.println("PARSER: CST skipped due to PARSER error(s)");
+                errors = 0;
+            }
+            else {
+                System.out.println();
+                System.out.println("PARSER: Parsing completed successfully");
+                System.out.println("PARSER: Printing CST for Program " + parseList.get(parseCounter).progNum + "...");
+                CST();
+                errors = 0;
+
+                //Semantic analyzer call here for the future
+            }
+        }
 
     }
 
@@ -53,23 +70,7 @@ public class Parser {
         //Check for an End-Of-Program symbol. If there is one, end the program gracefully, and let us know how many errors we got while parsing.
         handleParseToken("EOP_BLOCK", "parseEndOfProgram()");
         depth--;
-        if(endTheDamnThing == true) {
-            if(errors > 0) {
-                System.out.println();
-                System.out.println("PARSER: Parser failed with " + errors + " errors");
-                System.out.println("PARSER: CST skipped due to PARSER error(s)");
-                errors = 0;
-            }
-            else {
-                System.out.println();
-                System.out.println("PARSER: Parsing completed successfully");
-                System.out.println("PARSER: Printing CST for Program " + parseList.get(parseCounter).progNum + "...");
-                CST();
-                errors = 0;
-
-                //Semantic analyzer call here for the future
-            }
-        }
+        
     }
 
     //Find a block statement to parse off of, then match a corresponding close block token when we're finished
@@ -308,7 +309,7 @@ public class Parser {
     public void parseCharList() {
         //Check to see if we have a valid char for our current string (i.e. if it's considered a char or charspace, NOT an id in the token list)
         //Once we have our character, loop back to charlist to parse for more chars
-        System.out.println("parseCharList()");
+        System.out.println("PARSER: parseCharList()");
         addCST("Character List", depth);
         depth++;
         if(currentToken == "CHAR") {
