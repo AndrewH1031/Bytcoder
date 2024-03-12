@@ -7,13 +7,19 @@ public class Parser {
     ArrayList<Token> parseList; //List for storing our parse variables, we want to use these to print our CST later
     int parseCounter = 0; //for counting each token in the list, one by one
     int errors = 0; //Error count, tracks how many errors we happen to run into in our Parsing process. Program will refuse to print CST if there's any errors
-    int depth = 0;
-    int progCount = 0;
+    int depth = 0; //Random variable that we increase/decrease to print out in our CST. Usually is incremented before a program starts and decremented after it finishes
+    int progCount = 0; //Program counter
     String currentToken; //The current token we want to match up
     String nextToken; //The next token in line, used for finding proper tokens in sequence in stuff like IntOp
     boolean endTheDamnThing = false; //If this is true, end our program and print the CST if we have no errors. Only found if we parse through an EOP token
 
-    //NOTE: code currently works fine, however it MAY get a little wonky when Lexing multiple programs at a time. You can usually fix this by just rerunning the program in a new command prompt window
+    //NOTE: code currently works fine, however it MAY get a little wonky when Lexing multiple long programs at a time. You can usually fix this by just rerunning the program in a new command prompt window, or running them separately
+
+    //Some rules for this parser:
+    //1. Print statements MUST have at least one string as part of their declaration, so be sure to include a set of (" ") when printing things
+    //2. Boolean statements when comparing things naturally need a boolop token (== or !=), don't use a lone = for boolops or else you'll just get an error since that's considered an assignment token
+    //3. IDs don't need to be declared by any variable, but it would be very nice of you to :)
+    //4. Parser can currently only accept one number at a time (no double digits, like 12) - keep this in mind when assigning or using IntOps
 
     public void main(ArrayList<Token> list) {
         parseList = list; //set parseList equal to the list in our Lexer for comparison purposes
@@ -51,7 +57,7 @@ public class Parser {
             else {
                 System.out.println();
                 System.out.println("PARSER: Parsing completed successfully");
-                System.out.println("PARSER: Printing CST for Program " + progCount + "...");
+                System.out.println("PARSER: Printing CST for Program " + parseList.get(parseCounter).progNum + "...");
                 CST();
 
                 //Semantic analyzer call here for the future
@@ -303,7 +309,7 @@ public class Parser {
             depth--;
         }
         else {
-            //Nothing here...
+            error("CHAR", currentToken);
         }
     }
 
@@ -450,13 +456,13 @@ public class Parser {
         if(currentToken == expected) {
             //f we've parsed over an EOP token, then set our boolean to true and stop the program
             if(currentToken == "EOP_BLOCK") {
-                addCST("[" + currentToken + "]", depth);
+                addCST("[" + parseList.get(parseCounter).name + "]", depth);
                 endTheDamnThing = true;
                 //DON'T increment parseCounter here - it's the end of the program, there's nothing else left to read!
             }
             //Else it's just a regular token, handle it and add to the CST
             else {
-                addCST("[" + currentToken + "]", depth);
+                addCST("[" + parseList.get(parseCounter).name + "]", depth);
                 //System.out.println("Correct Token! It's " + expected); //Use this to test
                 parseCounter++;
             }
