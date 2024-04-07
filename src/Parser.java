@@ -6,8 +6,6 @@
 import java.util.ArrayList;
 
 public class Parser {
-    
-    SemanticAnalyzer SemanticAnalyzer = new SemanticAnalyzer();
 
     ArrayList<String> CST = new ArrayList<>(); //This is a list for now, will likely upgrade into a full tree eventually
     ArrayList<Integer> cstDepth = new ArrayList<>(); //Depth of each of our CST tokens, dutifully calculated before handling each one
@@ -28,6 +26,9 @@ public class Parser {
     //4. Parser can currently only accept one number at a time (no double digits, like 12) - keep this in mind when assigning or using IntOps
 
     public void main(ArrayList<Token> list) {
+            
+        SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
+
         parseList = list; //set parseList equal to the list in our Lexer for comparison purposes
         parseCounter = 0; //Reset parseCounter between lexer cals
         depth = 0; //Reset depth between lexer calls
@@ -54,7 +55,7 @@ public class Parser {
                 errors = 0;
                 CST.clear();
                 cstDepth.clear();
-                SemanticAnalyzer.main(parseList);
+                semanticAnalyzer.main(list);
                 parseList.clear();
 
                 //Semantic analyzer call here for the future
