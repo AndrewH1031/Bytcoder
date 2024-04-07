@@ -39,6 +39,7 @@ public class SemanticAnalyzer {
 
     //Main parse function - I'm only keeping this here for [insert witty joke]
     public void analyze() { //use this naming scheme
+        //System.out.println(semanticList);
         parseProgram();
     }
 
@@ -55,12 +56,12 @@ public class SemanticAnalyzer {
     }
 
     public void parseStatementList() {
-        System.out.println("god I hope this shit works");
+        System.out.println("Statement List");
         parseStatement();
     }
 
     public void parseStatement() {
-        System.out.println("has it stopped working yet???");
+        System.out.println("Statement");
         //parseBlock();
         parseIf();
         parseWhile();
@@ -72,34 +73,43 @@ public class SemanticAnalyzer {
         parseSpace();
         parseAST();
         addAST();
+        handleAnalyzedToken();
+        padDepth();
+        parseExpression();
+        error();
     }
 
     public void parsePrint() {
-        System.out.println("has it stopped working yet??? no");
+        //addAST("Print", depth);
+        System.out.println("Print");
     }
 
     public void parseAssign() {
-        System.out.println("has it stopped working yet??? nope");
-    }
-
-    public void parseInt() {
-        System.out.println("has it stopped working yet??? not yet");
+        //addAST("Assign", depth)
+        System.out.println("Assign");
     }
 
     public void parseIf() {
-        System.out.println("has it stopped working yet??? uh uh");
+        //addAST("If", depth);
+        System.out.println("If");
     }
 
     public void parseWhile() {
-        System.out.println("has it stopped working yet??? nothing here, no");
+        //addAST("While", depth)
+        System.out.println("While");
     }
 
     public void parseVarDecl() {
+        //addAST("Variable Dec", depth);
         System.out.println("VarDecl");
     }
 
     public void parseBoolean() {
         System.out.println("Boolean");
+    }
+
+    public void parseInt() {
+        System.out.println("Int");
     }
 
     public void parseString() {
@@ -111,6 +121,7 @@ public class SemanticAnalyzer {
     }
 
     public void parseCharList() {
+        //addAST("")
         System.out.println("CharList");
     }
 
@@ -135,6 +146,7 @@ public class SemanticAnalyzer {
     }
 
     public void parseBoolOp() {
+        //addAST("BoolOp", depth)
         System.out.println("BoolOp");
     }
 
@@ -156,5 +168,14 @@ public class SemanticAnalyzer {
 
     public void error() {
         System.out.println("errors go here");
+    }
+
+    public void padDepth() {
+        System.out.println("padding depth...turn this into a string function");
+    }
+
+    public void handleAnalyzedToken() {
+        //addAST("[" + semanticList.get(parseCounter).name + "]", depth);
+        System.out.println("Analyze da tokenz");
     }
 }
