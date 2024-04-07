@@ -26,6 +26,7 @@ public class SemanticAnalyzer {
         depth = 0; //Reset depth between lexer calls
         currentToken = semanticList.get(parseCounter).tokenType; //Set current token to the first element in our borrowed list
 
+        System.out.println();
         System.out.println("STARTING SEMANTIC ANALYSIS ON PROGRAM " + semanticList.get(parseCounter).progNum + "."); //change
         System.out.println();
         System.out.println("Beginning Analyzer...");
@@ -49,19 +50,32 @@ public class SemanticAnalyzer {
     }
 
     public void parseBlock() {
+        //DON'T check for match - parser already did that
+
         //Increment depth, scope comes later for symbol table
         System.out.println("parseBlock()");
         //addAST("Block", depth);
         parseStatementList();
+        //Add end block to AST after statement list?
     }
 
     public void parseStatementList() {
         System.out.println("Statement List");
-        parseStatement();
+
+        currentToken = semanticList.get(parseCounter).tokenType;
+        System.out.println(currentToken);
+
+        if(currentToken == "PRINTSTATEMENT" || currentToken == "ID" || currentToken == "WHILESTATEMENT" || currentToken == "IFSTATEMENT" || currentToken == "OPEN_BLOCK" || currentToken == "TYPEINT" || currentToken == "TYPESTRING" || currentToken == "TYPEBOOL") {
+
+            parseStatement();
+            //parseStatementList(); - don't loop for now
+        }
     }
 
     public void parseStatement() {
         System.out.println("Statement");
+        //Work in progress
+
         //parseBlock();
         parseIf();
         parseWhile();
@@ -82,51 +96,115 @@ public class SemanticAnalyzer {
     public void parsePrint() {
         //addAST("Print", depth);
         System.out.println("Print");
+        //parseExpression();
     }
 
     public void parseAssign() {
         //addAST("Assign", depth)
         System.out.println("Assign");
+        //parseID();
     }
 
     public void parseIf() {
         //addAST("If", depth);
         System.out.println("If");
+        //parseBoolean();
+        //parseBlock();
     }
 
     public void parseWhile() {
         //addAST("While", depth)
         System.out.println("While");
+        //parseBoolean();
+        //parseBlock();
     }
 
     public void parseVarDecl() {
         //addAST("Variable Dec", depth);
         System.out.println("VarDecl");
+        //parseTypeCheck();
+        //parseID();
     }
 
     public void parseBoolean() {
         System.out.println("Boolean");
+        //addAST if open paren detected
+        //parseExpression
+        //parseBoolOp
+        //parseBoolVal
+        //check for expression or boolval
+        if(currentToken == "OPEN_PAREN") {
+            handleParseToken("OPEN_PAREN", "parseOpenParen()");
+            parseExpression();
+            parseBoolOp();
+
+            //Set nextToken to currentToken + 1
+            if(semanticList.size() - 1 > parseCounter + 1) {
+                nextToken = parseList.get(parseCounter + 1).tokenType;
+            }
+
+            if(nextToken == "BOOLVAL") {
+                parseBoolVal();
+            }
+            else {
+                parseExpression();
+            }
+            //increment parsecounter and skip this next close paren token
+        }
+
+        else {
+            error("OPEN_PAREN", currentToken);
+        }
     }
 
     public void parseInt() {
         System.out.println("Int");
+        //parseDigit - no need to check for num, it's already foretold
+        
+        if(parseList.size() - 1 > parseCounter + 1) {
+            nextToken = parseList.get(parseCounter + 1).tokenType;
+        }
+
+        parseDigit();
+
+        if(nextToken == "INTOP") {
+            //parseAdd();
+            //parseExpression();
+        }
     }
 
     public void parseString() {
         System.out.println("String");
+        //parseCharList();
+        //skip over open/close quotes, we don't need them
     }
 
     public void parseChar() {
         System.out.println("Char");
+        //skip over???
+        //make sure to have functionality for charlist though
     }
 
     public void parseCharList() {
         //addAST("")
         System.out.println("CharList");
+        if(currentToken == "CHAR") {
+            parseChar();
+            parseCharList();
+        }
+        //Finally doing stuff with our space tokens
+        else if(currentToken == "CHARSPACE") {
+            parseSpace();
+            parseCharList();
+        }
+        else {
+            //Do nothing...We DON'T want to throw an error here, since that will gum things up
+        }
     }
 
     public void parseSpace() {
         System.out.println("Space");
+        //Add this??? don't really think we need to... just skip over it
     }
 
     public void parseExpression() {
@@ -135,10 +213,12 @@ public class SemanticAnalyzer {
 
     public void parseID() {
         System.out.println("ID");
+        //skip over
     }
 
     public void parseDigit() {
         System.out.println("Digit");
+        //addAST("Digit", depth);
     }
 
     public void parseTypeCheck() {
@@ -156,6 +236,7 @@ public class SemanticAnalyzer {
 
     public void parseAdd() {
         System.out.println("Intop");
+        //addAST("IntOp", depth);
     }
 
     public void parseAST() {
@@ -174,6 +255,7 @@ public class SemanticAnalyzer {
         System.out.println("padding depth...turn this into a string function");
     }
 
+    //I'm not sure if I still need this but I'll keep it around
     public void handleAnalyzedToken() {
         //addAST("[" + semanticList.get(parseCounter).name + "]", depth);
         System.out.println("Analyze da tokenz");
