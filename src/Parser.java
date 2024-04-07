@@ -7,6 +7,8 @@ import java.util.ArrayList;
 
 public class Parser {
     
+    //SemanticAnalyzer SemanticAnalyzer = new SemanticAnalyzer();
+
     ArrayList<String> CST = new ArrayList<>(); //This is a list for now, will likely upgrade into a full tree eventually
     ArrayList<Integer> cstDepth = new ArrayList<>(); //Depth of each of our CST tokens, dutifully calculated before handling each one
     ArrayList<Token> parseList; //List for storing our parse variables, we want to use these to print our CST later
@@ -52,6 +54,8 @@ public class Parser {
                 errors = 0;
                 CST.clear();
                 cstDepth.clear();
+                //SemanticAnalyzer.main(parseList);
+                //parseList.clear();
 
                 //Semantic analyzer call here for the future
             }

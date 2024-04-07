@@ -6,7 +6,7 @@ public class SemanticAnalyzer {
     ArrayList<Integer> astDepth = new ArrayList<>(); //this too
 
     //edit these for our incoming AST
-    ArrayList<Token> parseList; //List for storing our parse variables, we want to use these to print our CST later
+    ArrayList<Token> semanticList; //List for storing our parse variables, we want to use these to print our AST as well
     int parseCounter = 0; //for counting each token in the list, one by one
     int errors = 0; //Error count, tracks how many errors we happen to run into in our Parsing process. Program will refuse to print CST if there's any errors
     int depth = 0; //Need to reformat this
@@ -21,11 +21,15 @@ public class SemanticAnalyzer {
     //Also basically copy-pasted my Parser over because I ASSUME the AST is going to follow at least the same parsing logic as our parser
 
     public void main(ArrayList<Token> list) {
-x`
-        System.out.println("STARTING SEMANTIC ANALYSIS ON PROGRAM " + progCounter + "."); //change
+        semanticList = list; //set parseList equal to the list in our Lexer for comparison purposes
+        parseCounter = 0; //Reset parseCounter between lexer cals
+        depth = 0; //Reset depth between lexer calls
+        currentToken = semanticList.get(parseCounter).tokenType; //Set current token to the first element in our borrowed list
+
+        System.out.println("STARTING SEMANTIC ANALYSIS ON PROGRAM " + semanticList.get(parseCounter).progNum + "."); //change
         System.out.println();
-        System.out.println("Beginning Parser...");
-        currentToken = parseList.get(parseCounter).tokenType; //Set current token to the first element in our borrowed list
+        System.out.println("Beginning Analyzer...");
+        currentToken = semanticList.get(parseCounter).tokenType; //Set current token to the first element in our borrowed list
         analyze(); //Call AST print and Symbol Table methods from this
 
         AST.clear();
@@ -44,13 +48,12 @@ x`
     }
 
     public void parseBlock() {
-        //Add to AST here
-        //Add to AST depth too, that shit's important
-        //Increment depth, scope
+        addAST("Block", depth);
+        depth++;
+        //Increment depth, scope comes later for symbol table
         System.out.println("parseBlock()");
         //addAST("Block", depth);
         parseStatementList();
-        }
     }
 
     public void parseStatementList() {
@@ -109,7 +112,6 @@ x`
         parseID();
         //expand
         parseExpression();
-        }
     }
 
     //modify this
@@ -133,8 +135,8 @@ x`
             parseBoolOp();
 
 
-            if(parseList.size() - 1 > parseCounter + 1) {
-                nextToken = parseList.get(parseCounter + 1).tokenType;
+            if(semanticList.size() - 1 > parseCounter + 1) {
+                nextToken = semanticList.get(parseCounter + 1).tokenType;
             }
 
 
@@ -149,7 +151,6 @@ x`
 
         else {
             error("OPEN_PAREN", currentToken);
-        }
         }
     }
 
@@ -201,7 +202,6 @@ x`
         }
         else {
             //add to AST and ASTdepth
-        }
         }
     }
 
@@ -268,7 +268,7 @@ x`
             //Do nothing
         }
         else {
-        addCST("Boolean Operand", depth);
+        addAST("Boolean Operand", depth);
         handleParseToken("BOOLOP", "parseBooleanOperand()");
         }
     }
@@ -279,7 +279,7 @@ x`
 
     //Adds an IntOp (addition) symbol
     public void parseAdd() {
-        addCST("Integer Operation", depth);
+        addAST("Integer Operation", depth);
         handleParseToken("INTOP", "parseIntop()");
     }
     
@@ -324,13 +324,13 @@ x`
         if(currentToken == expected) {
             //f we've parsed over an EOP token, then set our boolean to true and stop the program
             if(currentToken == "EOP_BLOCK") {
-                addAST("[" + parseList.get(parseCounter).name + "]", depth);
+                addAST("[" + semanticList.get(parseCounter).name + "]", depth);
                 endTheDamnThing = true;
                 //DON'T increment parseCounter here - it's the end of the program, there's nothing else left to read!
             }
             //Else it's just a regular token, handle it and add to the CST
             else {
-                addAST("[" + parseList.get(parseCounter).name + "]", depth);
+                addAST("[" + semanticList.get(parseCounter).name + "]", depth);
                 //System.out.println("Correct Token! It's " + expected); //Use this to test
                 parseCounter++;
             }
@@ -340,12 +340,12 @@ x`
             error(expected, currentToken);
         }
         //Set our parser token to the next token once we're done
-        currentToken = parseList.get(parseCounter).tokenType;
+        currentToken = semanticList.get(parseCounter).tokenType;
     }
 
     //Method to handle errors - takes in the token we wanted and the one we got, and prints out an error message
     public void error(String expectedToken, String errorToken) {
-        System.out.println("ERROR: Expected [" + expectedToken + "], got [" + errorToken + "] on line " + parseList.get(parseCounter).lineCount);
+        System.out.println("ERROR: Expected [" + expectedToken + "], got [" + errorToken + "] on line " + semanticList.get(parseCounter).lineCount);
         errors++;
         parseCounter++;
     }
