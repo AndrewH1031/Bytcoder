@@ -18,6 +18,8 @@ public class SemanticAnalyzer {
 
     //Currently just messing around with the code to accept proper AST syntax - I'll do the stupid symbol table later. Code is also COMPLETELY NON-FUNCTIONAL, don't bother trying to run it yet.
 
+    //Also basically copy-pasted my Parser over because I ASSUME the AST is going to follow at least the same parsing logic as our parser
+
     public void main(ArrayList<Token> list) {
 x`
         System.out.println("STARTING SEMANTIC ANALYSIS ON PROGRAM " + progCounter + "."); //change
@@ -51,22 +53,16 @@ x`
         }
     }
 
-    //If we've got a proper token to start off our statement, then let it in. Otherwise, this is where our program stops
     public void parseStatementList() {
-
-        //If we start with any of the following tokens, then we have a valid sentence - send it to statement list for more complex parsing
         if(currentToken == "PRINTSTATEMENT" || currentToken == "ID" || currentToken == "WHILESTATEMENT" || currentToken == "IFSTATEMENT" || currentToken == "OPEN_BLOCK" || currentToken == "TYPEINT" || currentToken == "TYPESTRING" || currentToken == "TYPEBOOL") {
 
             parseStatement();
             parseStatementList();
         }
     }
-
-    //More in-depth token searching than statementList(), this time we want to find a parsing home for all of our promising token candidates
+    
     public void parseStatement() {
-        //Case statement depending on what kind of token we have
         switch(currentToken) {
-            //Can add nested block statements through this
             case("OPEN_BLOCK"):
                 parseBlock();
             break;
@@ -80,11 +76,9 @@ x`
                 parseWhile();
             break; 
             case("ID"):
-            //Assigning an ID or do we just have a lone ID? Don't know, let's pass it to Assign()
                 parseAssign();
             break;  
             case("TYPEINT"):
-            //Types are declared, need to pass it to VarDecl()
                 parseVarDecl();
             break;
             case("TYPESTRING"):
@@ -93,7 +87,6 @@ x`
             case("TYPEBOOL"):
                 parseVarDecl();
             break;
-            //If we've got nothing, then throw an error
             default:
                 error("STATEMENT", currentToken); //change this
             break;
