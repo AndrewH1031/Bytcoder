@@ -12,7 +12,7 @@ public class SemanticAnalyzer {
     int depth = 0; //Need to reformat this
     String currentToken; //idk what to do with this anymore
     String nextToken; //The next token in line, used for finding proper tokens in sequence in stuff like IntOp
-    boolean endTheDamnThing = false; //If this is true, end our program and print the CST if we have no errors. Only found if we parse through an EOP token
+    boolean endTheDamnThing = false; //If this is true, end our program and print the CST if we have no errors. Only found if we parse through an EOP token.
 
     int progCounter = 0;
 
