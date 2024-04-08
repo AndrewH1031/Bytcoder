@@ -9,12 +9,11 @@ public class SemanticAnalyzer {
     ArrayList<Token> semanticList; //List for storing our parse variables, we want to use these to print our AST as well
     int parseCounter = 0; //for counting each token in the list, one by one
     int errors = 0; //Error count, tracks how many errors we happen to run into in our Parsing process. Program will refuse to print CST if there's any errors
+    int warnings = 0; //might need this soon
     int depth = 0; //Need to reformat this
     String currentToken; //idk what to do with this anymore
     String nextToken; //The next token in line, used for finding proper tokens in sequence in stuff like IntOp
     boolean endTheDamnThing = false; //If this is true, end our program and print the CST if we have no errors. Only found if we parse through an EOP token
-
-    int progCounter = 0;
 
     //Currently just messing around with the code to accept proper AST syntax - I'll do the stupid symbol table later. Code is SORT OF WORKING, just make sure to recompile this file every time to make sure the class file is there.
 
@@ -27,7 +26,7 @@ public class SemanticAnalyzer {
         depth = 0; //Reset depth between lexer calls
 
         System.out.println();
-        System.out.println("STARTING SEMANTIC ANALYSIS ON PROGRAM " + semanticList.get(parseCounter).progNum + "."); //change
+        System.out.println("Semantic Analysis for Program " + semanticList.get(parseCounter).progNum);
         System.out.println();
         System.out.println("Beginning Analyzer...");
         currentToken = semanticList.get(parseCounter).tokenType; //Set current token to the first element in our borrowed list
@@ -42,6 +41,18 @@ public class SemanticAnalyzer {
     public void analyze() { //use this naming scheme
         //System.out.println(semanticList);
         parseProgram();
+        if(errors > 0) {
+            System.out.println("Semantic Analysis failed with " + errors + " errors and " + warnings + "warnings");
+            
+        }
+        else {
+            System.out.println("Semantic Analysis completed with " + errors + " errors and " + warnings + "warnings");
+            System.out.println();
+            System.out.println("Printing AST...");
+            System.out.println();
+            AST();
+            //symbol table stuff here
+        }
     }
 
     //I think this just analyzes the program thingy now and nothing else
@@ -123,9 +134,19 @@ public class SemanticAnalyzer {
     public void parsePrint() {
         addAST("Print", depth);
         System.out.println("Print");
-        //Skip these tokens
-        //parseExpression();
-        //Skip these tokens too
+
+        //Skip the first two tokens we encounter (string statement and open quotes) and jump straight to the expression
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
+
+        parseExpression();
+
+        //One last skip over the close quotes token
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
+
     }
 
     public void parseAssign() {
@@ -165,13 +186,9 @@ public class SemanticAnalyzer {
 
     public void parseBoolean() {
         System.out.println("Boolean");
-        //addAST if open paren detected
-        //parseExpression
-        //parseBoolOp
-        //parseBoolVal
-        //check for expression or boolval
         if(currentToken == "OPEN_PAREN") {
-            //refresh
+            parseCounter = refresh(parseCounter);
+            currentToken = semanticList.get(parseCounter).tokenType;
             parseExpression();
             parseBoolOp();
 
@@ -187,6 +204,9 @@ public class SemanticAnalyzer {
                 parseExpression();
             }
             //increment parsecounter and skip this next close paren token - use refresh
+            parseCounter = refresh(parseCounter);
+            currentToken = semanticList.get(parseCounter).tokenType;
+            
         }
 
         else {
@@ -287,12 +307,13 @@ public class SemanticAnalyzer {
 
     public void parseID() {
         System.out.println("ID");
+        handleSemanticToken("ID", currentToken);
         //add to AST?
     }
 
     public void parseDigit() {
         System.out.println("Digit");
-        addAST("NUM", depth);
+        handleSemanticToken("NUM", currentToken);
 
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
@@ -330,7 +351,7 @@ public class SemanticAnalyzer {
 
     public void parseBoolVal() {
         System.out.println("BoolVal");
-        //expand
+        handleSemanticToken("BOOLVAL", currentToken);
     }
 
     public void parseAdd() {
