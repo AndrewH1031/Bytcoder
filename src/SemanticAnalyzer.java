@@ -12,19 +12,19 @@ public class SemanticAnalyzer {
     int depth = 0; //Need to reformat this
     String currentToken; //idk what to do with this anymore
     String nextToken; //The next token in line, used for finding proper tokens in sequence in stuff like IntOp
-    boolean endTheDamnThing = false; //If this is true, end our program and print the CST if we have no errors. Only found if we parse through an EOP token.
+    boolean endTheDamnThing = false; //If this is true, end our program and print the CST if we have no errors. Only found if we parse through an EOP token
 
     int progCounter = 0;
 
     //Currently just messing around with the code to accept proper AST syntax - I'll do the stupid symbol table later. Code is also COMPLETELY NON-FUNCTIONAL, don't bother trying to run it yet.
 
-    //Also basically copy-pasted my Parser over because I ASSUME the AST is going to follow at least the same parsing logic as our parser
+    //General ideas:
+    //Keep parse function redirects, but just skip over tokens themselves - we don't want to parse them a second time
 
     public void main(ArrayList<Token> list) {
         semanticList = list; //set parseList equal to the list in our Lexer for comparison purposes
-        parseCounter = 0; //Reset parseCounter between lexer cals
+        parseCounter = 0; //Reset parseCounter between lexer calls
         depth = 0; //Reset depth between lexer calls
-        currentToken = semanticList.get(parseCounter).tokenType; //Set current token to the first element in our borrowed list
 
         System.out.println();
         System.out.println("STARTING SEMANTIC ANALYSIS ON PROGRAM " + semanticList.get(parseCounter).progNum + "."); //change
@@ -55,6 +55,7 @@ public class SemanticAnalyzer {
         //Increment depth, scope comes later for symbol table
         System.out.println("parseBlock()");
         //addAST("Block", depth);
+        refresh(currentToken, parseCounter);
         parseStatementList();
         //Add end block to AST after statement list?
     }
@@ -96,7 +97,9 @@ public class SemanticAnalyzer {
     public void parsePrint() {
         //addAST("Print", depth);
         System.out.println("Print");
+        //Skip these tokens
         //parseExpression();
+        //Skip these tokens too
     }
 
     public void parseAssign() {
@@ -149,7 +152,7 @@ public class SemanticAnalyzer {
             else {
                 parseExpression();
             }
-            //increment parsecounter and skip this next close paren token
+            //increment parsecounter and skip this next close paren token - use refresh
         }
 
         else {
@@ -165,6 +168,7 @@ public class SemanticAnalyzer {
             nextToken = parseList.get(parseCounter + 1).tokenType;
         }
 
+        //Still parse digit
         parseDigit();
 
         if(nextToken == "INTOP") {
@@ -186,6 +190,7 @@ public class SemanticAnalyzer {
     }
 
     public void parseCharList() {
+        //Add something here to keep track of strings
         //addAST("")
         System.out.println("CharList");
         if(currentToken == "CHAR") {
@@ -209,16 +214,17 @@ public class SemanticAnalyzer {
 
     public void parseExpression() {
         System.out.println("Expression");
+        //expand
     }
 
     public void parseID() {
         System.out.println("ID");
-        //skip over
+        //add to AST?
     }
 
     public void parseDigit() {
         System.out.println("Digit");
-        //addAST("Digit", depth);
+        //addAST("NUM", depth);
     }
 
     public void parseTypeCheck() {
@@ -260,4 +266,12 @@ public class SemanticAnalyzer {
         //addAST("[" + semanticList.get(parseCounter).name + "]", depth);
         System.out.println("Analyze da tokenz");
     }
+
+    //replaces the current token with the next token in line, effectively "refreshing" it. Basically the same as what was going on in the old handleParseToken
+    //function in the Parser, only that this has a lot less steps
+    public void refresh(String currentToken, int parseCounter) {
+        parseCounter++;
+        currentToken = semanticList.get(parseCounter).tokenType;
+    }
+
 }
