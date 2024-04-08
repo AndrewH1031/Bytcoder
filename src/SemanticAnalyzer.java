@@ -54,48 +54,74 @@ public class SemanticAnalyzer {
 
         //Increment depth, scope comes later for symbol table
         System.out.println("parseBlock()");
-        //addAST("Block", depth);
-        refresh(currentToken, parseCounter);
-        System.out.println(currentToken);
+        addAST("Open Block", depth);
+
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
+
         parseStatementList();
-        //Add end block to AST after statement list?
+
+        //Check for a close block at the end of our block statement - no need to match it up, parser has that covered already!
+        addAST("Close Block", depth);
+
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
+
     }
 
     public void parseStatementList() {
         System.out.println("Statement List");
 
         currentToken = semanticList.get(parseCounter).tokenType;
-        System.out.println(currentToken);
+        System.out.println(currentToken); //test
 
         if(currentToken == "PRINTSTATEMENT" || currentToken == "ID" || currentToken == "WHILESTATEMENT" || currentToken == "IFSTATEMENT" || currentToken == "OPEN_BLOCK" || currentToken == "TYPEINT" || currentToken == "TYPESTRING" || currentToken == "TYPEBOOL") {
 
             parseStatement();
-            //parseStatementList(); - don't loop for now
+            parseStatementList();
         }
     }
 
     public void parseStatement() {
         System.out.println("Statement");
-        //Work in progress
-
-        //parseBlock();
-        parseIf();
-        parseWhile();
-        parsePrint();
-        parseAssign();
-        parseVarDecl();
-        parseInt();
-        parseDigit();
-        parseSpace();
-        AST();
-        addAST("TEST", depth);
-        System.out.println(padDepth(3));
-        parseExpression();
-        error();
+        //Case statement depending on what kind of token we have
+        switch(currentToken) {
+            //Can add nested block statements through this
+            case("OPEN_BLOCK"):
+                parseBlock();
+            break;
+            case("PRINTSTATEMENT"):
+                parsePrint();
+            break;
+            case("IFSTATEMENT"):
+                parseIf();
+            break;
+            case("WHILESTATEMENT"):
+                parseWhile();
+            break; 
+            case("ID"):
+            //Assigning an ID or do we just have a lone ID? Don't know, let's pass it to Assign()
+                parseAssign();
+            break;
+            case("TYPEINT"):
+            //Types are declared, need to pass it to VarDecl()
+                parseVarDecl();
+            break;
+            case("TYPESTRING"):
+                parseVarDecl();
+            break;
+            case("TYPEBOOL"):
+                parseVarDecl();
+            break;
+            //If we've got nothing, then throw an error
+            default:
+                error();
+            break;
+        }
     }
 
     public void parsePrint() {
-        //addAST("Print", depth);
+        addAST("Print", depth);
         System.out.println("Print");
         //Skip these tokens
         //parseExpression();
@@ -103,30 +129,38 @@ public class SemanticAnalyzer {
     }
 
     public void parseAssign() {
-        //addAST("Assign", depth)
+        addAST("Assign", depth);
         System.out.println("Assign");
-        //parseID();
+        parseID();
+        //Skip over this token that we previously checked for
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
+        parseExpression();
     }
 
     public void parseIf() {
-        //addAST("If", depth);
+        addAST("If", depth);
         System.out.println("If");
-        //parseBoolean();
-        //parseBlock();
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
+        parseBoolean();
+        parseBlock();
     }
 
     public void parseWhile() {
-        //addAST("While", depth)
+        addAST("While", depth);
         System.out.println("While");
-        //parseBoolean();
-        //parseBlock();
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
+        parseBoolean();
+        parseBlock();
     }
 
     public void parseVarDecl() {
-        //addAST("Variable Dec", depth);
+        addAST("Variable Dec", depth);
         System.out.println("VarDecl");
-        //parseTypeCheck();
-        //parseID();
+        parseTypeCheck();
+        parseID();
     }
 
     public void parseBoolean() {
@@ -172,19 +206,25 @@ public class SemanticAnalyzer {
         parseDigit();
 
         if(nextToken == "INTOP") {
-            //parseAdd();
-            //parseExpression();
+            parseAdd();
+            parseExpression();
         }
     }
 
     public void parseString() {
         System.out.println("String");
-        //parseCharList();
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
+        parseCharList();
         //skip over open/close quotes, we don't need them
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
     }
 
     public void parseChar() {
         System.out.println("Char");
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
         //skip over???
         //make sure to have functionality for charlist though
     }
@@ -209,12 +249,40 @@ public class SemanticAnalyzer {
 
     public void parseSpace() {
         System.out.println("Space");
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
         //Add this??? don't really think we need to... just skip over it
     }
 
     public void parseExpression() {
         System.out.println("Expression");
-        //expand
+        //Expressions go here - this is reserved for stuff inside parentheses usually, which means a whole lot of boolop tokens being parsed
+        addAST("Expression", depth);
+        switch(currentToken) {
+            //If it's a digit, parse it as an integer expression
+            case("NUM"):
+                parseInt();
+            break;
+            //If it's a string, parse it as a string expression
+            case("OPENSTRING"):
+                parseString();
+            break;
+            //We can parse for initialized IDs as well, or use in IntOp/if or while expressions
+            case("ID"):
+                parseID();
+            break;
+            //If it's an open parentheses, then it's the start of a boolean expression (since we're parsing it here) - send it over
+            case("OPEN_PAREN"):
+                parseBoolean();
+            break;
+            //If it's a boolean value, parse it - This is the ONLY time we should ever be parsing this!
+            case("BOOLVAL"):
+                parseBoolVal();
+            break;
+            default:
+                error();
+            break;
+        }
     }
 
     public void parseID() {
@@ -225,6 +293,9 @@ public class SemanticAnalyzer {
     public void parseDigit() {
         System.out.println("Digit");
         addAST("NUM", depth);
+
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
     }
 
     public void parseTypeCheck() {
@@ -252,6 +323,9 @@ public class SemanticAnalyzer {
     public void parseBoolOp() {
         System.out.println("BoolOp");
         addAST("Boolean Op", depth);
+        
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
     }
 
     public void parseBoolVal() {
@@ -262,6 +336,9 @@ public class SemanticAnalyzer {
     public void parseAdd() {
         System.out.println("Intop");
         addAST("Integer Op", depth);
+
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
     }
 
     public void error() {
@@ -283,7 +360,7 @@ public class SemanticAnalyzer {
     }
 
     public void addAST(String tokenInAST, int tokenDepth) {
-        System.out.println("AST addition goes here");
+        System.out.println("AST addition goes here - current token is " + tokenInAST); //test
         AST.add(tokenInAST);
         astDepth.add(tokenDepth);
     }
@@ -323,9 +400,11 @@ public class SemanticAnalyzer {
 
     //replaces the current token with the next token in line, effectively "refreshing" it. Basically the same as what was going on in the old handleParseToken
     //function in the Parser, only that this has a lot less steps
-    public void refresh(String currentToken, int parseCounter) {
+    public int refresh(int parseCounter) {
         parseCounter++;
         currentToken = semanticList.get(parseCounter).tokenType;
+
+        return parseCounter;
     }
 
 }
