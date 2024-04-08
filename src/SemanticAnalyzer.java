@@ -66,6 +66,7 @@ public class SemanticAnalyzer {
         //Increment depth, scope comes later for symbol table
         System.out.println("parseBlock()");
         addAST("Open Block", depth);
+        depth++;
 
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
@@ -77,6 +78,7 @@ public class SemanticAnalyzer {
 
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
+        depth--;
 
     }
 
@@ -134,54 +136,65 @@ public class SemanticAnalyzer {
     public void parsePrint() {
         addAST("Print", depth);
         System.out.println("Print");
-
+        
         //Skip the first two tokens we encounter (string statement and open quotes) and jump straight to the expression
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
-
+        depth++;
         parseExpression();
-
+        depth--;
         //One last skip over the close quotes token
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
+        
 
     }
 
     public void parseAssign() {
         addAST("Assign", depth);
         System.out.println("Assign");
+
+        depth++;
         parseID();
         //Skip over this token that we previously checked for
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
         parseExpression();
+        depth--;
     }
 
     public void parseIf() {
         addAST("If", depth);
         System.out.println("If");
+        depth++;
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
         parseBoolean();
         parseBlock();
+        depth--;
     }
 
     public void parseWhile() {
         addAST("While", depth);
         System.out.println("While");
+        depth++;
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
+        
         parseBoolean();
         parseBlock();
+        depth--;
     }
 
     public void parseVarDecl() {
         addAST("Variable Dec", depth);
         System.out.println("VarDecl");
+        depth++;
         parseTypeCheck();
         parseID();
+        depth--;
     }
 
     public void parseBoolean() {
@@ -277,7 +290,7 @@ public class SemanticAnalyzer {
     public void parseExpression() {
         System.out.println("Expression");
         //Expressions go here - this is reserved for stuff inside parentheses usually, which means a whole lot of boolop tokens being parsed
-        addAST("Expression", depth);
+        //addAST("Expression", depth);
         switch(currentToken) {
             //If it's a digit, parse it as an integer expression
             case("NUM"):
@@ -314,9 +327,6 @@ public class SemanticAnalyzer {
     public void parseDigit() {
         System.out.println("Digit");
         handleSemanticToken("NUM", currentToken);
-
-        parseCounter = refresh(parseCounter);
-        currentToken = semanticList.get(parseCounter).tokenType;
     }
 
     public void parseTypeCheck() {
@@ -345,8 +355,10 @@ public class SemanticAnalyzer {
         System.out.println("BoolOp");
         addAST("Boolean Op", depth);
         
+        depth++;
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
+        depth--;
     }
 
     public void parseBoolVal() {
@@ -356,10 +368,10 @@ public class SemanticAnalyzer {
 
     public void parseAdd() {
         System.out.println("Intop");
-        addAST("Integer Op", depth);
-
-        parseCounter = refresh(parseCounter);
-        currentToken = semanticList.get(parseCounter).tokenType;
+        addAST("Integer Operation", depth);
+        depth++;
+        handleSemanticToken("INTOP", currentToken);
+        depth--;
     }
 
     public void error() {
@@ -398,18 +410,16 @@ public class SemanticAnalyzer {
     //I'm not sure if I still need this but I'll keep it around
     public void handleSemanticToken(String expected, String output) {
         if(currentToken == expected) {
-            //f we've parsed over an EOP token, then set our boolean to true and stop the program
+            //if we've parsed over an EOP token, then set our boolean to true and stop the program
             if(currentToken == "EOP_BLOCK") {
-                addAST("[" + semanticList.get(parseCounter).name + "]", depth);
+                System.out.println("yay!");
                 endTheDamnThing = true;
                 //DON'T increment parseCounter here - it's the end of the program, there's nothing else left to read!
             }
             //Else it's just a regular token, handle it and add to the CST
-            else {
                 addAST("[" + semanticList.get(parseCounter).name + "]", depth);
                 //System.out.println("Correct Token! It's " + expected); //Use this to test
                 parseCounter++;
-            }
         }
         //If it doesn't match, then we throw an error and increment parseCounter
         else {
