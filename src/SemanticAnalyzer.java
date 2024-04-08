@@ -16,7 +16,7 @@ public class SemanticAnalyzer {
 
     int progCounter = 0;
 
-    //Currently just messing around with the code to accept proper AST syntax - I'll do the stupid symbol table later. Code is also COMPLETELY NON-FUNCTIONAL, don't bother trying to run it yet.
+    //Currently just messing around with the code to accept proper AST syntax - I'll do the stupid symbol table later. Code is SORT OF WORKING, just make sure to recompile this file every time to make sure the class file is there.
 
     //General ideas:
     //Keep parse function redirects, but just skip over tokens themselves - we don't want to parse them a second time
@@ -56,6 +56,7 @@ public class SemanticAnalyzer {
         System.out.println("parseBlock()");
         //addAST("Block", depth);
         refresh(currentToken, parseCounter);
+        System.out.println(currentToken);
         parseStatementList();
         //Add end block to AST after statement list?
     }
@@ -86,10 +87,9 @@ public class SemanticAnalyzer {
         parseInt();
         parseDigit();
         parseSpace();
-        parseAST();
-        addAST();
-        handleAnalyzedToken();
-        padDepth();
+        AST();
+        addAST("TEST", depth);
+        System.out.println(padDepth(3));
         parseExpression();
         error();
     }
@@ -137,13 +137,13 @@ public class SemanticAnalyzer {
         //parseBoolVal
         //check for expression or boolval
         if(currentToken == "OPEN_PAREN") {
-            handleParseToken("OPEN_PAREN", "parseOpenParen()");
+            //refresh
             parseExpression();
             parseBoolOp();
 
             //Set nextToken to currentToken + 1
             if(semanticList.size() - 1 > parseCounter + 1) {
-                nextToken = parseList.get(parseCounter + 1).tokenType;
+                nextToken = semanticList.get(parseCounter + 1).tokenType;
             }
 
             if(nextToken == "BOOLVAL") {
@@ -156,7 +156,7 @@ public class SemanticAnalyzer {
         }
 
         else {
-            error("OPEN_PAREN", currentToken);
+            error();
         }
     }
 
@@ -164,8 +164,8 @@ public class SemanticAnalyzer {
         System.out.println("Int");
         //parseDigit - no need to check for num, it's already foretold
         
-        if(parseList.size() - 1 > parseCounter + 1) {
-            nextToken = parseList.get(parseCounter + 1).tokenType;
+        if(semanticList.size() - 1 > parseCounter + 1) {
+            nextToken = semanticList.get(parseCounter + 1).tokenType;
         }
 
         //Still parse digit
@@ -224,47 +224,101 @@ public class SemanticAnalyzer {
 
     public void parseDigit() {
         System.out.println("Digit");
-        //addAST("NUM", depth);
+        addAST("NUM", depth);
     }
 
     public void parseTypeCheck() {
         System.out.println("TypeCheck");
+        if((currentToken == "TYPEINT") || (currentToken == "TYPESTRING") || (currentToken == "TYPEBOOL")) {
+            switch(currentToken) {
+                case("TYPEINT"):
+                    handleSemanticToken("TYPEINT", "parseInt()");
+                break;
+                case("TYPESTRING"):
+                    handleSemanticToken("TYPESTRING", "parseString()");
+                break;
+                case("TYPEBOOL"):
+                    handleSemanticToken("TYPEBOOL", "parseBoolean()");
+                break;
+            }
+        }
+        //Don't need an else statement here since handleParseToken takes care of errors for us
+        //nvm it's nice to have backup options
+        else {
+            error();
+        }
     }
 
     public void parseBoolOp() {
-        //addAST("BoolOp", depth)
         System.out.println("BoolOp");
+        addAST("Boolean Op", depth);
     }
 
     public void parseBoolVal() {
         System.out.println("BoolVal");
+        //expand
     }
 
     public void parseAdd() {
         System.out.println("Intop");
-        //addAST("IntOp", depth);
-    }
-
-    public void parseAST() {
-        System.out.println("AST goes here");
-    }
-
-    public void addAST() {
-        System.out.println("AST addition goes here");
+        addAST("Integer Op", depth);
     }
 
     public void error() {
         System.out.println("errors go here");
     }
 
-    public void padDepth() {
-        System.out.println("padding depth...turn this into a string function");
+    public void AST() {
+        System.out.println();
+
+        for(int i = 0; i < AST.size(); i++) {
+            String printToken = AST.get(i);
+            String depthPadded = padDepth(astDepth.get(i));
+            System.out.println(depthPadded + "<" + printToken + ">");
+        }
+
+        //Clear our lists for future use
+        AST.clear();
+        astDepth.clear();
+    }
+
+    public void addAST(String tokenInAST, int tokenDepth) {
+        System.out.println("AST addition goes here");
+        AST.add(tokenInAST);
+        astDepth.add(tokenDepth);
+    }
+
+    public String padDepth(int depthToBePadded) {
+        String filler = "";
+        //If depth = 7, will add 7 "-" symbols to the filler list
+        for (int i = 0; i < depthToBePadded; i++) {
+            filler = filler + "-";
+        }
+        return filler;
     }
 
     //I'm not sure if I still need this but I'll keep it around
-    public void handleAnalyzedToken() {
-        //addAST("[" + semanticList.get(parseCounter).name + "]", depth);
-        System.out.println("Analyze da tokenz");
+    public void handleSemanticToken(String expected, String output) {
+        if(currentToken == expected) {
+            //f we've parsed over an EOP token, then set our boolean to true and stop the program
+            if(currentToken == "EOP_BLOCK") {
+                addAST("[" + semanticList.get(parseCounter).name + "]", depth);
+                endTheDamnThing = true;
+                //DON'T increment parseCounter here - it's the end of the program, there's nothing else left to read!
+            }
+            //Else it's just a regular token, handle it and add to the CST
+            else {
+                addAST("[" + semanticList.get(parseCounter).name + "]", depth);
+                //System.out.println("Correct Token! It's " + expected); //Use this to test
+                parseCounter++;
+            }
+        }
+        //If it doesn't match, then we throw an error and increment parseCounter
+        else {
+            error();
+        }
+        //Set our parser token to the next token once we're done
+        currentToken = semanticList.get(parseCounter).tokenType;
     }
 
     //replaces the current token with the next token in line, effectively "refreshing" it. Basically the same as what was going on in the old handleParseToken
