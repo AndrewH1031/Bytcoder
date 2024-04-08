@@ -69,18 +69,6 @@ public class Lexer {
                     //System.out.println(stringolon);
                     //System.out.println(string);
                     
-                    //If there's no end program symbol found at the end of our file input, throw a FATAL error
-                    //Will print for the current line, working on optimizing this
-                    if(string.length() == i + 1) {
-                        if(!tokenList.hasNextLine()) {
-                            if(string.charAt(i) != '$') { //Ensures it checks the absolute last character
-                                System.out.println("ERROR LEXER - Fatal Error: " + lineCounter + " : " + counter + " Missing Block Statement for Current Program");
-                                errors++;
-                                counter++;
-                                break;
-                            }
-                        }
-                    }
 
                     //If we're in a comment, check to see if there's a matching end comment token we can use
                     //Works for now, will implement functionality with forward eventually
