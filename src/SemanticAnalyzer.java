@@ -10,9 +10,11 @@ public class SemanticAnalyzer {
     int parseCounter = 0; //for counting each token in the list, one by one
     int errors = 0; //Error count, tracks how many errors we happen to run into in our Parsing process. Program will refuse to print CST if there's any errors
     int warnings = 0; //might need this soon
-    int depth = 0; //Need to reformat this
+    int depth = 0;
+    int scope = -1; //this looks awful but it's the only way to make sure it's 0 on the first block
     String currentToken; //idk what to do with this anymore
     String nextToken; //The next token in line, used for finding proper tokens in sequence in stuff like IntOp
+    String sentence = "";
     boolean endTheDamnThing = false; //If this is true, end our program and print the CST if we have no errors. Only found if we parse through an EOP token
 
     //Currently just messing around with the code to accept proper AST syntax - I'll do the stupid symbol table later. Code is SORT OF WORKING, just make sure to recompile this file every time to make sure the class file is there.
@@ -30,7 +32,8 @@ public class SemanticAnalyzer {
         System.out.println();
         System.out.println("Beginning Analyzer...");
         currentToken = semanticList.get(parseCounter).tokenType; //Set current token to the first element in our borrowed list
-        analyze(); //Call AST print and Symbol Table methods from this
+
+        analyze(); //Call AST print from this
 
         AST.clear();
         astDepth.clear();
@@ -43,7 +46,8 @@ public class SemanticAnalyzer {
         parseProgram();
         if(errors > 0) {
             System.out.println("Semantic Analysis failed with " + errors + " errors and " + warnings + "warnings");
-            
+            System.out.println();
+            System.out.println("AST and Symbol Table skipped due to Semantic Analysis errors");
         }
         else {
             System.out.println("Semantic Analysis completed with " + errors + " errors and " + warnings + "warnings");
@@ -51,7 +55,7 @@ public class SemanticAnalyzer {
             System.out.println("Printing AST...");
             System.out.println();
             AST();
-            //symbol table stuff here
+            //call symbol table print
         }
     }
 
@@ -63,10 +67,10 @@ public class SemanticAnalyzer {
     public void parseBlock() {
         //DON'T check for match - parser already did that
 
-        //Increment depth, scope comes later for symbol table
         System.out.println("parseBlock()");
         addAST("Open Block", depth);
         depth++;
+        scope++; //increment scope to accomodate new block
 
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
@@ -78,7 +82,10 @@ public class SemanticAnalyzer {
 
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
+
+        //Decrement depth and scope when we're done
         depth--;
+        scope--;
 
     }
 
@@ -256,14 +263,29 @@ public class SemanticAnalyzer {
 
     public void parseChar() {
         System.out.println("Char");
+
+        //Call our processString method to add our current token to the string
+        sentence = processString(sentence);
+
+        //Refresh our token
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
-        //skip over???
-        //make sure to have functionality for charlist though
+    }
+
+    public void parseSpace() {
+        System.out.println("Space");
+
+        //Call our processString method to add our current token to the string
+        sentence = processString(sentence);
+
+        //Refresh our token
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
     }
 
     public void parseCharList() {
         //Add something here to keep track of strings
+
         //addAST("")
         System.out.println("CharList");
         if(currentToken == "CHAR") {
@@ -277,14 +299,20 @@ public class SemanticAnalyzer {
         }
         else {
             //Do nothing...We DON'T want to throw an error here, since that will gum things up
+            addAST("[" + sentence + "]", depth);
+            sentence = "";
+            
+            //Put something here to add strings? If not then make a new if else
         }
     }
 
-    public void parseSpace() {
-        System.out.println("Space");
-        parseCounter = refresh(parseCounter);
-        currentToken = semanticList.get(parseCounter).tokenType;
-        //Add this??? don't really think we need to... just skip over it
+    //Simple little function to concatenate our strings together using the power of our Token class. Thanks, Token class!
+    //Basically just pulls the current token's name (not type, which is what we usually have on hand) and adds it to sentence. Since we're always going to be in a string when we reach this function,
+    //we can treat every token as a char
+    public String processString(String sentence) {
+        sentence = sentence + semanticList.get(parseCounter).name;
+
+        return sentence;
     }
 
     public void parseExpression() {
@@ -437,5 +465,7 @@ public class SemanticAnalyzer {
 
         return parseCounter;
     }
+
+    //addSymbolTable: take 
 
 }
