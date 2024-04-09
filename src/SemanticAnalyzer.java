@@ -4,6 +4,14 @@ public class SemanticAnalyzer {
     
     ArrayList<String> AST = new ArrayList<>(); //Assuming I'm going to need this like last time
     ArrayList<Integer> astDepth = new ArrayList<>(); //this too
+    ArrayList<> symbolList = new ArrayList<>(); //make this like the token class in lexer - add stuff to it
+    //add based on:
+    // - name of token
+    // - scope
+    // - type
+    // - if it's used
+    // - if it's initialized
+    //can just use first three for the actual definitions, used/init can be bool
 
     //edit these for our incoming AST
     ArrayList<Token> semanticList; //List for storing our parse variables, we want to use these to print our AST as well
@@ -11,7 +19,7 @@ public class SemanticAnalyzer {
     int errors = 0; //Error count, tracks how many errors we happen to run into in our Parsing process. Program will refuse to print CST if there's any errors
     int warnings = 0; //might need this soon
     int depth = 0;
-    int scope = -1; //this looks awful but it's the only way to make sure it's 0 on the first block
+    int scope = 0;
     String currentToken; //idk what to do with this anymore
     String nextToken; //The next token in line, used for finding proper tokens in sequence in stuff like IntOp
     String sentence = "";
@@ -26,6 +34,7 @@ public class SemanticAnalyzer {
         semanticList = list; //set parseList equal to the list in our Lexer for comparison purposes
         parseCounter = 0; //Reset parseCounter between lexer calls
         depth = 0; //Reset depth between lexer calls
+        int scope = -1; //this looks awful but it's the only way to make sure it's 0 on the first block
 
         System.out.println();
         System.out.println("Semantic Analysis for Program " + semanticList.get(parseCounter).progNum);
@@ -37,6 +46,7 @@ public class SemanticAnalyzer {
 
         AST.clear();
         astDepth.clear();
+        symbolList.clear();
         
         }
 
@@ -74,6 +84,8 @@ public class SemanticAnalyzer {
 
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
+
+        System.out.println(scope); //test
 
         parseStatementList();
 
@@ -175,9 +187,9 @@ public class SemanticAnalyzer {
     public void parseIf() {
         addAST("If", depth);
         System.out.println("If");
-        depth++;
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
+        depth++;
         parseBoolean();
         parseBlock();
         depth--;
@@ -186,10 +198,10 @@ public class SemanticAnalyzer {
     public void parseWhile() {
         addAST("While", depth);
         System.out.println("While");
-        depth++;
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
         
+        depth++;
         parseBoolean();
         parseBlock();
         depth--;
@@ -348,12 +360,14 @@ public class SemanticAnalyzer {
 
     public void parseID() {
         System.out.println("ID");
-        handleSemanticToken("ID", currentToken);
-        //add to AST?
+        addAST(currentToken, depth);
+        //add to AST immediately, then call scope checking method
+        scopeCheck();
     }
 
     public void parseDigit() {
         System.out.println("Digit");
+        //just handle this like normal
         handleSemanticToken("NUM", currentToken);
     }
 
@@ -440,7 +454,7 @@ public class SemanticAnalyzer {
         if(currentToken == expected) {
             //if we've parsed over an EOP token, then set our boolean to true and stop the program
             if(currentToken == "EOP_BLOCK") {
-                System.out.println("yay!");
+                //System.out.println("yay!");
                 endTheDamnThing = true;
                 //DON'T increment parseCounter here - it's the end of the program, there's nothing else left to read!
             }
@@ -466,6 +480,16 @@ public class SemanticAnalyzer {
         return parseCounter;
     }
 
-    //addSymbolTable: take 
+    //addSymbolTable
 
+    public void scopeCheck() { //put params here for tokens
+        System.out.println("congrats on making it this far!");
+        //if we're declaring the ID:
+            //add to symbol table
+            //scope check it
+                //can't declare two variables with the same name in the same scope
+                //I'm guessing below and above are fine??? test it out
+        //else then we're not declaring - just check scope to make sure it's being called properly
+            //can call variables from scopes lower than the dec but not higher - 1 can call 0 but not 2
+    }
 }
