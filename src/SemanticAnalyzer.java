@@ -12,12 +12,13 @@ public class SemanticAnalyzer {
     int warnings = 0; //might need this soon
     int depth = 0;
     int scope = 0;
-    String currentToken; //idk what to do with this anymore
+    String currentToken; //The current token in the symbol list
     String nextToken; //The next token in line, used for finding proper tokens in sequence in stuff like IntOp
     String sentence = "";
+    String prevToken; //The previous ID token that we parsed. Used for comparing to the result of our expression when type checking assignments
     boolean endTheDamnThing = false; //If this is true, end our program and print the CST if we have no errors. Only found if we parse through an EOP token
-    boolean declaring = false;
-    boolean assigning = false;
+    boolean declaring = false; //Used when we want to declare a variable initially
+    boolean assigning = false; //Used when we're assigning values to our tokens
 
     //Symbol table is currently a bit strange when it comes to detecting if something's been used or not - currently working on a fix
 
@@ -42,8 +43,8 @@ public class SemanticAnalyzer {
         
         }
 
-    //Main parse function - I'm only keeping this here for [insert witty joke]
-    public void analyze() { //use this naming scheme
+    //Main parse function
+    public void analyze() {
         //System.out.println(semanticList);
         analyzeProgram();
         if(errors > 0) {
@@ -61,7 +62,6 @@ public class SemanticAnalyzer {
         }
     }
 
-    //I think this just analyzes the program thingy now and nothing else
     public void analyzeProgram() {
         analyzeBlock();
     }
@@ -170,12 +170,30 @@ public class SemanticAnalyzer {
         System.out.println("Assign");
 
         depth++;
+        //Set assigning to true so we can properly deal with our assignment statements
         assigning = true;  
         analyzeID();
+        
         //Skip over this token that we previously checked for
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
-        analyzeExpression();
+
+        //Type checking time! We'll need to see if our assignments are making sense
+        //Initialize our two comparison tokens - pastToken, which will grab the type value of the previous ID token in line, and secondType, which will grab the result of the expression that we want to parse.
+        //our prevToken is ran through a scope checking function to make sure it's on a scope level we can access
+        String pastToken = typeMatch(symbolList, prevToken, scope);
+        String secondType = analyzeExpression();
+        //System.out.println("past token is " + pastToken);
+
+        //Compare our two tokens that we got
+        if(pastToken == secondType) {
+            //do nothing, this is a good thing
+        }
+        //If our tokens don't match (usually due to it returning an "error"), then throw an error message
+        else {
+            mismatchError(pastToken, secondType, semanticList.get(parseCounter).lineCount);
+            errors++;
+        }
         depth--;
     }
 
@@ -185,6 +203,7 @@ public class SemanticAnalyzer {
         System.out.println("If");
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
+
         depth++;
         analyzeBoolean();
         analyzeBlock();
@@ -208,6 +227,7 @@ public class SemanticAnalyzer {
     public void analyzeVarDecl() {
         addAST("Variable Dec", depth);
         System.out.println("VarDecl");
+
         depth++;
         analyzeTypeCheck();
         declaring = true;
@@ -240,6 +260,7 @@ public class SemanticAnalyzer {
             
         }
 
+        //If the token is not what we expected, throw an error
         else {
             System.out.println("ERROR: expected " + currentToken + ", got token " + scope + " on line " + semanticList.get(parseCounter).lineCount);
             errors++;
@@ -327,35 +348,34 @@ public class SemanticAnalyzer {
         return sentence;
     }
 
-    public void analyzeExpression() {
-        System.out.println("Expression");
-        //Expressions go here - this is reserved for stuff inside parentheses usually, which means a whole lot of boolop tokens being parsed
-        //addAST("Expression", depth);
-        switch(currentToken) {
-            //If it's a digit, parse it as an integer expression
-            case("NUM"):
-                analyzeInt();
-            break;
-            //If it's a string, parse it as a string expression
-            case("OPENSTRING"):
-                analyzeString();
-            break;
-            //We can parse for initialized IDs as well, or use in IntOp/if or while expressions
-            case("ID"):
-                assigning = true;
-                analyzeID();
-            break;
-            //If it's an open parentheses, then it's the start of a boolean expression (since we're parsing it here) - send it over
-            case("OPEN_PAREN"):
-                analyzeBoolean();
-            break;
-            //If it's a boolean value, parse it - This is the ONLY time we should ever be parsing this!
-            case("BOOLVAL"):
-                analyzeBoolVal();
-            break;
-            default:
-                System.out.println("ERROR: expected " + currentToken + ", got token " + scope + " on line " + semanticList.get(parseCounter).lineCount);
-            break;
+    //Revamped to access type checking from the analyzeAssign method - can return a string value based on the type of token being plugged into it
+    //A big thank you once again to Stack Overflow for teaching me that I could do this:
+    //      https://stackoverflow.com/questions/18855837/initialize-variable-in-recursive-function
+    //      https://stackoverflow.com/questions/47250825/recursive-function-variable-initialization 
+    public String analyzeExpression() {
+        if(currentToken.equals("NUM")) {
+            analyzeInt();
+            return "int";
+        }
+        else if(currentToken.equals("OPENSTRING")) {
+            analyzeString();
+            return "string";
+        }
+        else if(currentToken.equals("ID")) {
+            analyzeID();
+            return "id";
+        }
+        else if(currentToken.equals("OPEN_PAREN")) {
+            analyzeBoolean();
+            return "bool";
+        }
+        else if(currentToken.equals("BOOLVAL")) {
+            analyzeBoolVal();
+            return "bool";
+        }
+        else {
+            errors++;
+            return "error";
         }
     }
 
@@ -408,7 +428,7 @@ public class SemanticAnalyzer {
         handleSemanticToken("BOOLVAL", currentToken);
     }
 
-    //Add digit to AST and 
+    //Add digit to AST and double check it
     public void analyzeAdd() {
         System.out.println("Intop");
         addAST("Integer Operation", depth);
@@ -479,10 +499,10 @@ public class SemanticAnalyzer {
         return parseCounter;
     }
 
-
+    //Check the scope of our ID tokens
     public void scopeCheck() {
 
-        //If we're initializing or declaring a variable
+        //If we're initializing or declaring a variable, this is where we go
         if(declaring == true) {
 
         //Backup variable to store the results of our symbolMatch class
@@ -554,6 +574,8 @@ public class SemanticAnalyzer {
                 assignError();
                 errors++;
             }
+            //Set prevtoken to the last ID we parsed
+            prevToken = semanticList.get(parseCounter).name;
         }
     }
 
@@ -595,6 +617,29 @@ public class SemanticAnalyzer {
         return 300; //Returns a dummy number if nothing matches
     }
 
+    //Carbon copy of our scope comparison method, this time tweaked a bit to compare token types instead
+    public String typeMatch(ArrayList<Symbol> symbolList, String prevToken, int scope) {
+
+        for (Symbol symbol : symbolList) {
+            //System.out.println("current symbol is " + symbol.symbolType);
+
+            //If our current symbol's type matches with the previous ID's type, then we can assign
+            if (symbol.symbolType.equals(prevToken)) {
+                //If our names and scopes match, great! hand it back to our main loop and set it to declared
+                if (symbol.scope == scope) {
+                    //System.out.println("yay!!!");
+                    return symbol.name;
+                    
+                }
+                //If our names match but our scopes don't, return scope anyways
+                else {
+                    return symbol.name;
+                }
+            }
+        }
+        return "nothing"; //Returns a dummy output if nothing matches
+    }
+
     //Assignment error printoud method - used for scope errors
     public void assignError() {
         System.out.println("ERROR: the token " + currentToken + " was used before being declared on line " + semanticList.get(parseCounter).lineCount);
@@ -605,4 +650,8 @@ public class SemanticAnalyzer {
         System.out.println("ERROR: the token " + currentToken + " has already been declared in scope " + scope + " on line " + semanticList.get(parseCounter).lineCount);
     }
 
+    //Assignment mismatch error method
+    public void mismatchError(String pasterToken, String firstType, int lineThingy) {
+        System.out.println("ERROR: Expected " + pasterToken + " token for assignment, got " + firstType + " on line " + lineThingy);
+    }
 }
