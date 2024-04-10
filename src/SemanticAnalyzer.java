@@ -4,7 +4,7 @@ public class SemanticAnalyzer {
     
     ArrayList<String> AST = new ArrayList<>(); //Assuming I'm going to need this like last time
     ArrayList<Integer> astDepth = new ArrayList<>(); //this too
-    ArrayList<> symbolList = new ArrayList<>(); //make this like the token class in lexer - add stuff to it
+    ArrayList<Symbol> symbolList = new ArrayList<>(); //make this like the token class in lexer - add stuff to it
     //add based on:
     // - name of token
     // - scope
@@ -24,6 +24,8 @@ public class SemanticAnalyzer {
     String nextToken; //The next token in line, used for finding proper tokens in sequence in stuff like IntOp
     String sentence = "";
     boolean endTheDamnThing = false; //If this is true, end our program and print the CST if we have no errors. Only found if we parse through an EOP token
+    boolean declaring = false;
+    boolean assigning = false;
 
     //Currently just messing around with the code to accept proper AST syntax - I'll do the stupid symbol table later. Code is SORT OF WORKING, just make sure to recompile this file every time to make sure the class file is there.
 
@@ -176,6 +178,7 @@ public class SemanticAnalyzer {
         System.out.println("Assign");
 
         depth++;
+        assigning = true;  
         parseID();
         //Skip over this token that we previously checked for
         parseCounter = refresh(parseCounter);
@@ -212,6 +215,7 @@ public class SemanticAnalyzer {
         System.out.println("VarDecl");
         depth++;
         parseTypeCheck();
+        declaring = true;
         parseID();
         depth--;
     }
@@ -360,9 +364,14 @@ public class SemanticAnalyzer {
 
     public void parseID() {
         System.out.println("ID");
-        addAST(currentToken, depth);
+        addAST(semanticList.get(parseCounter).name, depth);
         //add to AST immediately, then call scope checking method
+        System.out.println(declaring);
         scopeCheck();
+        
+        //refresh our token
+        parseCounter = refresh(parseCounter);
+        currentToken = semanticList.get(parseCounter).tokenType;
     }
 
     public void parseDigit() {
@@ -418,6 +427,7 @@ public class SemanticAnalyzer {
 
     public void error() {
         System.out.println("errors go here");
+        //expand
     }
 
     public void AST() {
@@ -482,8 +492,8 @@ public class SemanticAnalyzer {
 
     //addSymbolTable
 
-    public void scopeCheck() { //put params here for tokens
-        System.out.println("congrats on making it this far!");
+    public void scopeCheck() {
+
         //if we're declaring the ID:
             //add to symbol table
             //scope check it
@@ -491,5 +501,43 @@ public class SemanticAnalyzer {
                 //I'm guessing below and above are fine??? test it out
         //else then we're not declaring - just check scope to make sure it's being called properly
             //can call variables from scopes lower than the dec but not higher - 1 can call 0 but not 2
+
+            if(declaring == true){
+                System.out.println("yay!!!");
+                declaring = false;
+                /*
+                if symbol scope less than current scope. or is equal to it {
+                    set isItUsed to true
+                }
+                else if symbol scope is greater than current scope {
+                    throw error
+                }
+            }
+            else {
+                error();
+            }
+    
+            */
+            }
+
+        if(assigning == true) {
+            System.out.println("yay!");
+            /*if symbol scope is less than or greater than current scope {
+                add to symbol table and set isItDeclared to true
+            }
+            if symbol scope is equal to current scope {
+                throw error
+            }*/
+        }
+
+        
+
+        symbolList.add(new Symbol(semanticList.get(parseCounter).name, semanticList.get(parseCounter-1).name, scope));
+        symbolList.get(symbolList.size()-1).isItDeclared = true; //testing
+
+        //print out table - put this in its own method
+        for(int i = 0; i < symbolList.size(); i++) {
+            System.out.println("Name: " + symbolList.get(i).symbolType + " Type: " +  symbolList.get(i).name + " Scope: " + symbolList.get(i).scope + " Declared: " + symbolList.get(i).isItDeclared + " Used: " + symbolList.get(i).isItUsed); //thing that we want to compare
+        }
     }
 }
