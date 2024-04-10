@@ -5,15 +5,7 @@ public class SemanticAnalyzer {
     ArrayList<String> AST = new ArrayList<>(); //Assuming I'm going to need this like last time
     ArrayList<Integer> astDepth = new ArrayList<>(); //this too
     ArrayList<Symbol> symbolList = new ArrayList<>(); //make this like the token class in lexer - add stuff to it
-    //add based on:
-    // - name of token
-    // - scope
-    // - type
-    // - if it's used
-    // - if it's initialized
-    //can just use first three for the actual definitions, used/init can be bool
 
-    //edit these for our incoming AST
     ArrayList<Token> semanticList; //List for storing our parse variables, we want to use these to print our AST as well
     int parseCounter = 0; //for counting each token in the list, one by one
     int errors = 0; //Error count, tracks how many errors we happen to run into in our Parsing process. Program will refuse to print CST if there's any errors
@@ -27,10 +19,7 @@ public class SemanticAnalyzer {
     boolean declaring = false;
     boolean assigning = false;
 
-    //Currently just messing around with the code to accept proper AST syntax - I'll do the stupid symbol table later. Code is SORT OF WORKING, just make sure to recompile this file every time to make sure the class file is there.
-
-    //General ideas:
-    //Keep parse function redirects, but just skip over tokens themselves - we don't want to parse them a second time
+    //Symbol table is currently a bit strange when it comes to detecting if something's been used or not - currently working on a fix
 
     public void main(ArrayList<Token> list) {
         semanticList = list; //set parseList equal to the list in our Lexer for comparison purposes
@@ -348,6 +337,7 @@ public class SemanticAnalyzer {
             break;
             //We can parse for initialized IDs as well, or use in IntOp/if or while expressions
             case("ID"):
+                assigning = true;
                 analyzeID();
             break;
             //If it's an open parentheses, then it's the start of a boolean expression (since we're parsing it here) - send it over
@@ -501,8 +491,8 @@ public class SemanticAnalyzer {
                 
                 
                 
-                //System.out.println("backup is " + backup);
-                //System.out.println("scope is " + scope);
+                System.out.println("backup is " + backup);
+                System.out.println("scope is " + scope);
 
                 if(backup > scope || backup < scope) {
                     //System.out.println("backup completed!");
@@ -518,8 +508,9 @@ public class SemanticAnalyzer {
                 symbolList.add(new Symbol(semanticList.get(parseCounter).name, semanticList.get(parseCounter-1).name, scope)); //move this
                 symbolList.get(symbolList.size()-1).isItDeclared = true;
             }
-            }
             declaring = false;
+            }
+
 
         if(assigning == true) {
             //System.out.println("yay!");
@@ -542,6 +533,7 @@ public class SemanticAnalyzer {
                 }
             }
             else if(backup > scope) {
+                //System.out.println("secondary backup completed?");
                 assignError();
                 errors++;
             }
