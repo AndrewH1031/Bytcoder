@@ -507,8 +507,9 @@ public class SemanticAnalyzer {
             if(declaring == true){
                 //System.out.println("yay!!!");
                 int backup = symbolMatch(symbolList, scope);
+                
                 if(backup != 300) {
-                declaring = false;
+                
                 
                 
                 System.out.println("backup is " + backup);
@@ -517,34 +518,56 @@ public class SemanticAnalyzer {
                 if(backup > scope || backup < scope) {
                     System.out.println("backup completed!");
                     symbolList.add(new Symbol(semanticList.get(parseCounter).name, semanticList.get(parseCounter-1).name, scope));
+                    symbolList.get(symbolList.size()-1).isItDeclared = true;
                 }
                 else if(backup == scope) {
-                    errorInit();
+                    declError();
+                    errors++;
                 }
-                
-
-                /*
-                if symbol scope less than current scope. or is equal to it {
-                    set isItUsed to true
-                }
-                else if symbol scope is greater than current scope {
-                    throw error
-                }
-            }
-            else {
-                error();
-            }
-    
-            */
             }
             else {
                 symbolList.add(new Symbol(semanticList.get(parseCounter).name, semanticList.get(parseCounter-1).name, scope)); //move this
                 symbolList.get(symbolList.size()-1).isItDeclared = true;
             }
             }
+            declaring = false;
 
         if(assigning == true) {
             //System.out.println("yay!");
+            //System.out.println("yay!!!");
+            int backup = symbolMatch(symbolList, scope);
+            if(backup != 300) {
+            
+            
+            
+            System.out.println("backup is " + backup);
+            System.out.println("scope is " + scope);
+
+            if(backup < scope || backup == scope) {
+                System.out.println("secondary backup completed!");
+                for (Symbol symbol : symbolList) {
+                    if (symbol.scope == scope) {
+                        symbol.isItUsed = true;
+                    }
+                }
+            }
+            else if(backup > scope) {
+                declError();
+                errors++;
+            }
+            else {
+                for (Symbol symbol : symbolList) {
+                    if (symbol.scope == scope) {
+                        symbol.isItUsed = true;
+                    }
+                }
+            }
+            assigning = false;
+        }
+        else {
+            declError();
+            errors++;
+        }
         }
 
             /*if symbol scope is less than or greater than current scope {
@@ -554,7 +577,7 @@ public class SemanticAnalyzer {
                 throw error
             }*/
 
-            
+        //symbolList.get(symbolList.size()-1).isItUsed = true;
 
 
         
@@ -573,15 +596,18 @@ public class SemanticAnalyzer {
          }
     }
 
+    //Used ChatGPT a little bit for this - asked to optimize the name matching between the two compared lists
     public int symbolMatch(ArrayList<Symbol> symbolList, int scope) {
+        //Declaring currentToken again in case
         String currentToken = semanticList.get(parseCounter).name;
         for (Symbol symbol : symbolList) {
             if (symbol.symbolType.equals(currentToken)) {
+                //If our names and scopes match, great! hand it back to our main loop and set it to declared
                 if (symbol.scope == scope) {
-                    symbol.isItDeclared = true; // Marking the symbol as declared (for testing)
                     return symbol.scope;
-                } else {
-                    // Symbol found, but scopes don't match
+                }
+                //If our names match but our scopes don't, return scope anyways
+                else {
                     return symbol.scope;
                 }
             }
@@ -589,6 +615,8 @@ public class SemanticAnalyzer {
         return 300; // Symbol not found
     }
 
-    
+    public void declError() {
+        System.out.println("ERROR:");
+    }
 
 }
