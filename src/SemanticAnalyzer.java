@@ -25,7 +25,8 @@ public class SemanticAnalyzer {
         semanticList = list; //set parseList equal to the list in our Lexer for comparison purposes
         parseCounter = 0; //Reset parseCounter between lexer calls
         depth = 0; //Reset depth between lexer calls
-        int scope = -1; //this looks awful but it's the only way to make sure it's 0 on the first block
+        scope = -1; //this looks awful but it's the only way to make sure it's 0 on the first block
+        errors = 0;
 
         System.out.println();
         System.out.println("Semantic Analysis for Program " + semanticList.get(parseCounter).progNum);
@@ -46,7 +47,7 @@ public class SemanticAnalyzer {
         //System.out.println(semanticList);
         analyzeProgram();
         if(errors > 0) {
-            System.out.println("Semantic Analysis failed with " + errors + " errors and " + warnings + "warnings");
+            System.out.println("Semantic Analysis failed with " + errors + " errors and " + warnings + " warnings");
             System.out.println();
             System.out.println("AST and Symbol Table skipped due to Semantic Analysis errors");
         }
@@ -163,6 +164,7 @@ public class SemanticAnalyzer {
 
     }
 
+    //Set our assigning flag to true and scan the ID to see if we're all set to initialize
     public void analyzeAssign() {
         addAST("Assign", depth);
         System.out.println("Assign");
@@ -177,6 +179,7 @@ public class SemanticAnalyzer {
         depth--;
     }
 
+    //Ignore all tokens except for what's in the statement
     public void analyzeIf() {
         addAST("If", depth);
         System.out.println("If");
@@ -188,6 +191,7 @@ public class SemanticAnalyzer {
         depth--;
     }
 
+    //Ignore all tokens except for what's in the statement
     public void analyzeWhile() {
         addAST("While", depth);
         System.out.println("While");
@@ -200,6 +204,7 @@ public class SemanticAnalyzer {
         depth--;
     }
 
+    //Declares type check and sets declaring to true, since we're initializing a variable with this method
     public void analyzeVarDecl() {
         addAST("Variable Dec", depth);
         System.out.println("VarDecl");
@@ -403,6 +408,7 @@ public class SemanticAnalyzer {
         handleSemanticToken("BOOLVAL", currentToken);
     }
 
+    //Add digit to AST and 
     public void analyzeAdd() {
         System.out.println("Intop");
         addAST("Integer Operation", depth);
@@ -411,6 +417,7 @@ public class SemanticAnalyzer {
         depth--;
     }
 
+    //Print AST method
     public void AST() {
         System.out.println();
 
@@ -425,6 +432,7 @@ public class SemanticAnalyzer {
         astDepth.clear();
     }
 
+    //Add AST method, much like how we added to the CST in our parser.
     public void addAST(String tokenInAST, int tokenDepth) {
         //System.out.println("AST addition goes here - current token is " + tokenInAST);
         AST.add(tokenInAST);
@@ -471,60 +479,53 @@ public class SemanticAnalyzer {
         return parseCounter;
     }
 
-    //addSymbolTable
 
     public void scopeCheck() {
 
-        //if we're declaring the ID:
-            //add to symbol table
-            //scope check it
-                //can't declare two variables with the same name in the same scope
-                //I'm guessing below and above are fine??? test it out
-        //else then we're not declaring - just check scope to make sure it's being called properly
-            //can call variables from scopes lower than the dec but not higher - 1 can call 0 but not 2
+        //If we're initializing or declaring a variable
+        if(declaring == true) {
 
-            if(declaring == true){
-                //System.out.println("yay!!!");
-                int backup = symbolMatch(symbolList, scope);
-                
-                if(backup != 300) {
-                
-                
-                
-                System.out.println("backup is " + backup);
-                System.out.println("scope is " + scope);
+        //Backup variable to store the results of our symbolMatch class
+        //symbolMatch will scope check the AST and return the scope of any other symbols that have the same declaration
+            int backup = symbolMatch(symbolList, scope);
+            
+            if(backup != 300) {
 
+                //If we've got a similar declaration in a scope higher or lower than our current symbol, then that means we can definitely initialize it here, since it won't overlap with any pre-existing
+                //declarations in this scope
                 if(backup > scope || backup < scope) {
                     //System.out.println("backup completed!");
                     symbolList.add(new Symbol(semanticList.get(parseCounter).name, semanticList.get(parseCounter-1).name, scope));
+
+                    //Set our declared flag to true since we just added it to our symbol table
                     symbolList.get(symbolList.size()-1).isItDeclared = true;
                 }
+
+                //If we've got the same scope for both matching declarations, throw an error
                 else if(backup == scope) {
                     declError();
                     errors++;
                 }
             }
+
+            //If it's not recognized in the symbol table search, then it's a completely new token for this program - add it to the table
             else {
                 symbolList.add(new Symbol(semanticList.get(parseCounter).name, semanticList.get(parseCounter-1).name, scope)); //move this
                 symbolList.get(symbolList.size()-1).isItDeclared = true;
             }
-            declaring = false;
-            }
+        declaring = false;
+        }
 
-
+        //If we're assigning a value to a variable
         if(assigning == true) {
-            //System.out.println("yay!");
-            //System.out.println("yay!!!");
+
             int backup = symbolMatch(symbolList, scope);
             if(backup != 300) {
-            
-            
-            
-            //System.out.println("backup is " + backup);
-            //System.out.println("scope is " + scope);
 
+            //If our target scope and current scope are equal (or if current scope is greater than the backup)
             if(backup < scope || backup == scope) {
-                //System.out.println("secondary backup completed!");
+
+                
                 //This is currently wonky, working on fixing it
                 for (Symbol symbol : symbolList) {
                     if (symbol.scope == scope) {
@@ -532,6 +533,8 @@ public class SemanticAnalyzer {
                     }
                 }
             }
+
+            //We can't assign stuff if it's in a higher scope than us - throw an error
             else if(backup > scope) {
                 //System.out.println("secondary backup completed?");
                 assignError();
@@ -545,29 +548,16 @@ public class SemanticAnalyzer {
                 }
             }
             assigning = false;
-        }
-        else {
-            assignError();
-            errors++;
-        }
-        }
-
-            /*if symbol scope is less than or greater than current scope {
-                add to symbol table and set isItDeclared to true
             }
-            if symbol scope is equal to current scope {
-                throw error
-            }*/
 
-        //symbolList.get(symbolList.size()-1).isItUsed = true;
-
-
-        
-        
-        //symbolList.get(symbolList.size()-1).isItUsed = true; //testing
-
+            else {
+                assignError();
+                errors++;
+            }
+        }
     }
 
+    //Print our symbol table
     public void printSymbolList() {
         //print out table - put this in its own method
         System.out.println();
@@ -586,9 +576,10 @@ public class SemanticAnalyzer {
     }
 
     //Used ChatGPT a little bit for this - asked to optimize the name matching between the two compared lists
+    //Parses through the entire symbol list to see if we've got any that are similar in type
     public int symbolMatch(ArrayList<Symbol> symbolList, int scope) {
-        //Declaring currentToken again in case
-        String currentToken = semanticList.get(parseCounter).name;
+        String currentToken = semanticList.get(parseCounter).name; //Declaring currentToken again in case
+
         for (Symbol symbol : symbolList) {
             if (symbol.symbolType.equals(currentToken)) {
                 //If our names and scopes match, great! hand it back to our main loop and set it to declared
@@ -604,10 +595,12 @@ public class SemanticAnalyzer {
         return 300; //Returns a dummy number if nothing matches
     }
 
+    //Assignment error printoud method - used for scope errors
     public void assignError() {
         System.out.println("ERROR: the token " + currentToken + " was used before being declared on line " + semanticList.get(parseCounter).lineCount);
     }
 
+    //Another scope error print method
     public void declError() {
         System.out.println("ERROR: the token " + currentToken + " has already been declared in scope " + scope + " on line " + semanticList.get(parseCounter).lineCount);
     }
