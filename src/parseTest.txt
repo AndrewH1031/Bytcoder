@@ -3,11 +3,17 @@
  boolean b
  {
  string c
+	{
+		int c
+
+	}
+	int c
  a = 5
  b = true /* no comment */
  c = "inta"
  print(c)
  }
+int a
  print(b)
  print(a)
 }$

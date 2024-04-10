@@ -67,7 +67,7 @@ public class SemanticAnalyzer {
             System.out.println("Printing AST...");
             System.out.println();
             AST();
-            //call symbol table print
+            printSymbolList();
         }
     }
 
@@ -87,7 +87,7 @@ public class SemanticAnalyzer {
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
 
-        System.out.println(scope); //test
+        //System.out.println(scope); //test
 
         parseStatementList();
 
@@ -107,7 +107,7 @@ public class SemanticAnalyzer {
         System.out.println("Statement List");
 
         currentToken = semanticList.get(parseCounter).tokenType;
-        System.out.println(currentToken); //test
+        //System.out.println(currentToken); //test
 
         if(currentToken == "PRINTSTATEMENT" || currentToken == "ID" || currentToken == "WHILESTATEMENT" || currentToken == "IFSTATEMENT" || currentToken == "OPEN_BLOCK" || currentToken == "TYPEINT" || currentToken == "TYPESTRING" || currentToken == "TYPEBOOL") {
 
@@ -365,8 +365,7 @@ public class SemanticAnalyzer {
     public void parseID() {
         System.out.println("ID");
         addAST(semanticList.get(parseCounter).name, depth);
-        //add to AST immediately, then call scope checking method
-        System.out.println(declaring);
+        //System.out.println(declaring);
         scopeCheck();
         
         //refresh our token
@@ -445,7 +444,7 @@ public class SemanticAnalyzer {
     }
 
     public void addAST(String tokenInAST, int tokenDepth) {
-        System.out.println("AST addition goes here - current token is " + tokenInAST); //test
+        //System.out.println("AST addition goes here - current token is " + tokenInAST);
         AST.add(tokenInAST);
         astDepth.add(tokenDepth);
     }
@@ -494,6 +493,9 @@ public class SemanticAnalyzer {
 
     public void scopeCheck() {
 
+        //use this instead of currenttoken when passing to matchSymbol
+        String backupToken = semanticList.get(parseCounter).tokenType;
+
         //if we're declaring the ID:
             //add to symbol table
             //scope check it
@@ -503,8 +505,24 @@ public class SemanticAnalyzer {
             //can call variables from scopes lower than the dec but not higher - 1 can call 0 but not 2
 
             if(declaring == true){
-                System.out.println("yay!!!");
+                //System.out.println("yay!!!");
+                int backup = symbolMatch(symbolList, scope);
+                if(backup != 300) {
                 declaring = false;
+                
+                
+                System.out.println("backup is " + backup);
+                System.out.println("scope is " + scope);
+
+                if(backup > scope || backup < scope) {
+                    System.out.println("backup completed!");
+                    symbolList.add(new Symbol(semanticList.get(parseCounter).name, semanticList.get(parseCounter-1).name, scope));
+                }
+                else if(backup == scope) {
+                    errorInit();
+                }
+                
+
                 /*
                 if symbol scope less than current scope. or is equal to it {
                     set isItUsed to true
@@ -519,25 +537,58 @@ public class SemanticAnalyzer {
     
             */
             }
+            else {
+                symbolList.add(new Symbol(semanticList.get(parseCounter).name, semanticList.get(parseCounter-1).name, scope)); //move this
+                symbolList.get(symbolList.size()-1).isItDeclared = true;
+            }
+            }
 
         if(assigning == true) {
-            System.out.println("yay!");
+            //System.out.println("yay!");
+        }
+
             /*if symbol scope is less than or greater than current scope {
                 add to symbol table and set isItDeclared to true
             }
             if symbol scope is equal to current scope {
                 throw error
             }*/
-        }
+
+            
+
 
         
+        
+        //symbolList.get(symbolList.size()-1).isItUsed = true; //testing
 
-        symbolList.add(new Symbol(semanticList.get(parseCounter).name, semanticList.get(parseCounter-1).name, scope));
-        symbolList.get(symbolList.size()-1).isItDeclared = true; //testing
-
-        //print out table - put this in its own method
-        for(int i = 0; i < symbolList.size(); i++) {
-            System.out.println("Name: " + symbolList.get(i).symbolType + " Type: " +  symbolList.get(i).name + " Scope: " + symbolList.get(i).scope + " Declared: " + symbolList.get(i).isItDeclared + " Used: " + symbolList.get(i).isItUsed); //thing that we want to compare
-        }
     }
+
+    public void printSymbolList() {
+         //print out table - put this in its own method
+         System.out.println();
+         System.out.println("NAME | TYPE | SCOPE | IS DECLARED? | IS USED?");
+         System.out.println("-----------------------------------------------");
+         for(int i = 0; i < symbolList.size(); i++) {
+             System.out.println(symbolList.get(i).symbolType + "     " +  symbolList.get(i).name + "     " + symbolList.get(i).scope + "     " + symbolList.get(i).isItDeclared + "      " + symbolList.get(i).isItUsed); //thing that we want to compare
+         }
+    }
+
+    public int symbolMatch(ArrayList<Symbol> symbolList, int scope) {
+        String currentToken = semanticList.get(parseCounter).name;
+        for (Symbol symbol : symbolList) {
+            if (symbol.symbolType.equals(currentToken)) {
+                if (symbol.scope == scope) {
+                    symbol.isItDeclared = true; // Marking the symbol as declared (for testing)
+                    return symbol.scope;
+                } else {
+                    // Symbol found, but scopes don't match
+                    return symbol.scope;
+                }
+            }
+        }
+        return 300; // Symbol not found
+    }
+
+    
+
 }
