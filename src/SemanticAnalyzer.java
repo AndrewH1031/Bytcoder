@@ -4,7 +4,7 @@ public class SemanticAnalyzer {
     
     ArrayList<String> AST = new ArrayList<>(); //Assuming I'm going to need this like last time
     ArrayList<Integer> astDepth = new ArrayList<>(); //this too
-    ArrayList<Symbol> symbolList = new ArrayList<>(); //make this like the token class in lexer - add stuff to it
+    ArrayList<Symbol> symbolList = new ArrayList<>();
 
     ArrayList<Token> semanticList; //List for storing our parse variables, we want to use these to print our AST as well
     int parseCounter = 0; //for counting each token in the list, one by one
@@ -15,7 +15,7 @@ public class SemanticAnalyzer {
     String currentToken; //The current token in the symbol list
     String nextToken; //The next token in line, used for finding proper tokens in sequence in stuff like IntOp
     String sentence = "";
-    String prevToken; //The previous ID token that we parsed. Used for comparing to the result of our expression when type checking assignments
+    String prevToken; //The previous token that we parsed. Used for comparing to the result of our expression when type checking assignments
     boolean endTheDamnThing = false; //If this is true, end our program and print the CST if we have no errors. Only found if we parse through an EOP token
     boolean declaring = false; //Used when we want to declare a variable initially
     boolean assigning = false; //Used when we're assigning values to our tokens
@@ -69,7 +69,7 @@ public class SemanticAnalyzer {
     public void analyzeBlock() {
         //DON'T check for match - parser already did that
 
-        System.out.println("analyzeBlock()");
+        System.out.println("SEMANTIC: BLOCK");
         addAST("Open Block", depth);
         depth++;
         scope++; //increment scope to accomodate new block
@@ -94,7 +94,7 @@ public class SemanticAnalyzer {
     }
 
     public void analyzeStatementList() {
-        System.out.println("Statement List");
+        System.out.println("SEMANTIC: Statement List");
 
         currentToken = semanticList.get(parseCounter).tokenType;
         //System.out.println(currentToken); //test
@@ -107,7 +107,7 @@ public class SemanticAnalyzer {
     }
 
     public void analyzeStatement() {
-        System.out.println("Statement");
+        System.out.println("SEMANTIC: Statement");
         //Case statement depending on what kind of token we have
         switch(currentToken) {
             //Can add nested block statements through this
@@ -147,7 +147,7 @@ public class SemanticAnalyzer {
 
     public void analyzePrint() {
         addAST("Print", depth);
-        System.out.println("Print");
+        System.out.println("SEMANTIC: Print");
         
         //Skip the first two tokens we encounter (string statement and open quotes) and jump straight to the expression
         parseCounter = refresh(parseCounter);
@@ -167,7 +167,7 @@ public class SemanticAnalyzer {
     //Set our assigning flag to true and scan the ID to see if we're all set to initialize
     public void analyzeAssign() {
         addAST("Assign", depth);
-        System.out.println("Assign");
+        System.out.println("SEMANTIC: Assign");
 
         depth++;
         //Set assigning to true so we can properly deal with our assignment statements
@@ -200,7 +200,7 @@ public class SemanticAnalyzer {
     //Ignore all tokens except for what's in the statement
     public void analyzeIf() {
         addAST("If", depth);
-        System.out.println("If");
+        System.out.println("SEMANTIC: If");
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
 
@@ -213,7 +213,7 @@ public class SemanticAnalyzer {
     //Ignore all tokens except for what's in the statement
     public void analyzeWhile() {
         addAST("While", depth);
-        System.out.println("While");
+        System.out.println("SEMANTIC: While");
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
         
@@ -226,7 +226,7 @@ public class SemanticAnalyzer {
     //Declares type check and sets declaring to true, since we're initializing a variable with this method
     public void analyzeVarDecl() {
         addAST("Variable Dec", depth);
-        System.out.println("VarDecl");
+        System.out.println("SEMANTIC: VarDecl");
 
         depth++;
         analyzeTypeCheck();
@@ -236,7 +236,7 @@ public class SemanticAnalyzer {
     }
 
     public void analyzeBoolean() {
-        System.out.println("Boolean");
+        System.out.println("SEMANTIC: Boolean");
         if(currentToken == "OPEN_PAREN") {
             parseCounter = refresh(parseCounter);
             currentToken = semanticList.get(parseCounter).tokenType;
@@ -268,7 +268,7 @@ public class SemanticAnalyzer {
     }
 
     public void analyzeInt() {
-        System.out.println("Int");
+        System.out.println("SEMANTIC: Int");
         //analyzeDigit - no need to check for num, it's already foretold
         
         if(semanticList.size() - 1 > parseCounter + 1) {
@@ -285,7 +285,7 @@ public class SemanticAnalyzer {
     }
 
     public void analyzeString() {
-        System.out.println("String");
+        System.out.println("SEMANTIC: String");
         parseCounter = refresh(parseCounter);
         currentToken = semanticList.get(parseCounter).tokenType;
         analyzeCharList();
@@ -295,7 +295,7 @@ public class SemanticAnalyzer {
     }
 
     public void analyzeChar() {
-        System.out.println("Char");
+        //System.out.println("SEMANTIC: Char");
 
         //Call our processString method to add our current token to the string
         sentence = processString(sentence);
@@ -306,7 +306,7 @@ public class SemanticAnalyzer {
     }
 
     public void analyzeSpace() {
-        System.out.println("Space");
+        //System.out.println("SEMANTIC: Space");
 
         //Call our processString method to add our current token to the string
         sentence = processString(sentence);
@@ -317,10 +317,9 @@ public class SemanticAnalyzer {
     }
 
     public void analyzeCharList() {
-        //Add something here to keep track of strings
-
+        
         //addAST("")
-        System.out.println("CharList");
+        //System.out.println("SEMANTIC: CharList");
         if(currentToken == "CHAR") {
             analyzeChar();
             analyzeCharList();
@@ -331,11 +330,9 @@ public class SemanticAnalyzer {
             analyzeCharList();
         }
         else {
-            //Do nothing...We DON'T want to throw an error here, since that will gum things up
+            //If we've reached this point that means our sentence is ready - add to AST and continue
             addAST("[" + sentence + "]", depth);
             sentence = "";
-            
-            //Put something here to add strings? If not then make a new if else
         }
     }
 
@@ -380,7 +377,7 @@ public class SemanticAnalyzer {
     }
 
     public void analyzeID() {
-        System.out.println("ID");
+        //System.out.println("SEMANTIC: ID");
         addAST(semanticList.get(parseCounter).name, depth);
         //System.out.println(declaring);
         scopeCheck();
@@ -391,13 +388,13 @@ public class SemanticAnalyzer {
     }
 
     public void analyzeDigit() {
-        System.out.println("Digit");
+        //System.out.println("SEMANTIC: Digit");
         //just handle this like normal
         handleSemanticToken("NUM", currentToken);
     }
 
     public void analyzeTypeCheck() {
-        System.out.println("TypeCheck");
+        System.out.println("SEMANTIC: TypeCheck");
         if((currentToken == "TYPEINT") || (currentToken == "TYPESTRING") || (currentToken == "TYPEBOOL")) {
             switch(currentToken) {
                 case("TYPEINT"):
@@ -414,7 +411,7 @@ public class SemanticAnalyzer {
     }
 
     public void analyzeBoolOp() {
-        System.out.println("BoolOp");
+        //System.out.println("SEMANTIC: BoolOp");
         addAST("Boolean Op", depth);
         
         depth++;
@@ -424,14 +421,14 @@ public class SemanticAnalyzer {
     }
 
     public void analyzeBoolVal() {
-        System.out.println("BoolVal");
+        //System.out.println("SEMANTIC: BoolVal");
         handleSemanticToken("BOOLVAL", currentToken);
     }
 
     //Add digit to AST and double check it
     public void analyzeAdd() {
-        System.out.println("Intop");
-        addAST("Integer Operation", depth);
+        //System.out.println("Intop");
+        addAST("SEMANTIC: Integer Operation", depth);
         depth++;
         handleSemanticToken("INTOP", currentToken);
         depth--;
@@ -631,7 +628,7 @@ public class SemanticAnalyzer {
                     return symbol.name;
                     
                 }
-                //If our names match but our scopes don't, return scope anyways
+                //If our names match but our scopes don't, return name anyways
                 else {
                     return symbol.name;
                 }
