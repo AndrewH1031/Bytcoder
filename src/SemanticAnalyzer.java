@@ -20,9 +20,15 @@ public class SemanticAnalyzer {
     boolean declaring = false; //Used when we want to declare a variable initially
     boolean assigning = false; //Used when we're assigning values to our tokens
 
+    CodeGen codeGen = new CodeGen();
+
     //Symbol table is currently a bit strange when it comes to detecting if something's been used or not - currently working on a fix
+    //still working on this....
 
     public void main(ArrayList<Token> list) {
+
+        
+
         semanticList = list; //set parseList equal to the list in our Lexer for comparison purposes
         parseCounter = 0; //Reset parseCounter between lexer calls
         depth = 0; //Reset depth between lexer calls
@@ -59,6 +65,7 @@ public class SemanticAnalyzer {
             System.out.println();
             AST();
             printSymbolList();
+            codeGen.main();
         }
     }
 
