@@ -65,7 +65,7 @@ public class SemanticAnalyzer {
             System.out.println();
             AST();
             printSymbolList();
-            codeGen.main();
+            codeGen.main(AST);
         }
     }
 
@@ -450,10 +450,6 @@ public class SemanticAnalyzer {
             String depthPadded = padDepth(astDepth.get(i));
             System.out.println(depthPadded + "<" + printToken + ">");
         }
-
-        //Clear our lists for future use
-        AST.clear();
-        astDepth.clear();
     }
 
     //Add AST method, much like how we added to the CST in our parser.
