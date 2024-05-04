@@ -435,7 +435,7 @@ public class SemanticAnalyzer {
     //Add digit to AST and double check it
     public void analyzeAdd() {
         //System.out.println("Intop");
-        addAST("SEMANTIC: Integer Operation", depth);
+        addAST("IntOp", depth);
         depth++;
         handleSemanticToken("INTOP", currentToken);
         depth--;
