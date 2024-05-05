@@ -168,6 +168,7 @@ public class CodeGen {
 
                     System.out.println(genTable.get(i).substring(0, 1));
 
+                    //Substring is a very helpful tool to grab our next token, free of charge
                     if(genTable.get(i).substring(0, 1).equals("(")) {
                         System.out.println("this is where strings should go");
 
@@ -204,6 +205,8 @@ public class CodeGen {
 
 
                     }
+                    //If our print statement is only one char long, then we've got an ID on our hands
+                    //No need to double check our type/syntax since our previous parts of the compiler have that taken care of
                     else if (genTable.get(i).length() < 2) {
                         System.out.println("This is where variables go");
 
@@ -211,33 +214,76 @@ public class CodeGen {
 
                         for(int j = 0; j < symbolOp.size(); j++) { //expand this
 
+                            //Checking for an int with exact name and type as our current symbol
                             if (symbolOp.get(j).name == "int" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
                                 System.out.println("this int goes hereeeeee");
                                 addOpCodes("01");
 
                             }
+
+                            //Checking for a boolean type
+
+                            //Merge this with int?
                             else if (symbolOp.get(j).name == "boolean" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
                                 System.out.println("this boolean goes hereeeeee");
                                 addOpCodes("01");
                             }
 
+                            //Lastly, check for a string type
                             else if (symbolOp.get(j).name == "string" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
                                 System.out.println("this string goes hereeeeee");
                                 addOpCodes("02");
                             }
                             addOpCodes("AC");
-                            addOpCodes("01"); //placeholder - upgrade this later
+                            addOpCodes("00"); //placeholder - upgrade this later
                             addOpCodes("XX");
                             addOpCodes("FF");
                         }
                     }
 
-                    //parse between variables and strings
+                    //Checking if we want to print a boolean value instead
+                    else if(genTable.get(i).equals("[true]") || genTable.get(i).equals("[false]")) {
+                        //If the value is true
+                        if(genTable.get(i).equals("[true]")) {
+                            addOpCodes("A2");
+                            addOpCodes("01");
+                            addOpCodes("A0");
+                            //Set the value to 1 for true
+                            addOpCodes("01");
+                        }
+                        //else it's false, change the loaded variable
+                        else {
+                            addOpCodes("A2");
+                            addOpCodes("01");
+                            addOpCodes("A0");
+                            //Set the value to 0 for false
+                            addOpCodes("00");
+                        }
+                        
+
+                    }
+
+                    //If it's NONE of those things, do something (don't know what yet);
+                    else {
+                        System.out.println("idk what to put here");
+                    }
+
+                    //parse between variables and strings (and boolean values, oops)
 
                 break;
                 case "If":
                     System.out.println("Ifstatement");
+                    i++;
+                    boolean notDoneYet = true;
+                    boolean negation = false;
+                    addOpCodes("A9");
+                    addOpCodes("00");
+                    addOpCodes("8D");
+                    addOpCodes("T0");
+                    addOpCodes("XX");
+                    
 
+                        //add branching, int expr and bool checking to this
 
 
                 break;
@@ -266,7 +312,7 @@ public class CodeGen {
     public void printCode() {
         System.out.println();
         System.out.println("CODEGEN: Printing Op Codes:");
-        int tempcount = 1;
+        int tempcount = 1; //temporary counter to see our order of op codes
 
         //Print our opcodes as we've initialized them
         for (int i = 0; i < opCodeList.size(); i++) {
