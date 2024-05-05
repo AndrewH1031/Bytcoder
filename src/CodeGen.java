@@ -90,14 +90,15 @@ public class CodeGen {
                         if (symbolOp.get(j).name == "int" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
                             //System.out.println("yayy!!!" + symbolOp.get(j).scope);
                             tempSymbol = symbolOp.get(j);
+                            System.out.println("current token is" + genTable.get(i));
                             i++;
                             String tempy = "";
                             System.out.println("currenterrrr token is " + genTable.get(i));
 
                             addOpCodes("A9");
 
-                            if(genTable.get(i).substring(1, genTable.get(i).length() - 1).length() < 3) {
-                                tempy = "0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, genTable.get(i).length()-1)));
+                            if(genTable.get(i).substring(1, genTable.get(i).length() - 1).length() < 2) {
+                                tempy = "0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, genTable.get(i).length() - 1)));
                                 addOpCodes(tempy);
                             }
                             else {
@@ -107,6 +108,9 @@ public class CodeGen {
                             addOpCodes("8D");
                             addOpCodes("T0");
                             addOpCodes("XX");
+
+                            //expand this, it's definitely not long enough
+                            //include assigning for IDs, strings and ints
 
                             break;
                         }
@@ -139,7 +143,33 @@ public class CodeGen {
                                 //System.out.println(currentString.charAt(x) + " is our currentString"); //test
                             }
 
+                            addOpCodes("A9");
+                            addOpCodes(Integer.toHexString(heapCount + 1));
+                            addOpCodes("8D");
+                            addOpCodes("00"); //placeholder
+                            addOpCodes("00");
+
                             break;
+                        }
+
+                        else if (symbolOp.get(j).name == "bool" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
+                            System.out.println("boolean is supposed to be here");
+                            i++;
+
+                            addOpCodes("A9");
+                            
+                            if(genTable.get(i).equals("[true]")) {
+                                System.out.println("true is supposed to go here");
+                                addOpCodes("01");
+                            }
+                            else {
+                                System.out.println("false is supposed to go here");
+                                addOpCodes("00");
+                            }
+
+                            addOpCodes("8D");
+                            addOpCodes("00"); //placeholder
+                            addOpCodes("XX");
                         }
                     }
 
@@ -194,6 +224,7 @@ public class CodeGen {
                             heapCount--;
                             addOpCodes("00");
                         }
+
                         addOpCodes("A9");
                         addOpCodes(Integer.toHexString(heapCount + 1).toUpperCase());
                         addOpCodes("8D");
@@ -250,6 +281,7 @@ public class CodeGen {
                     else if(genTable.get(i).equals("[true]") || genTable.get(i).equals("[false]")) {
                         //If the value is true
                         if(genTable.get(i).equals("[true]")) {
+                            System.out.println("print true");
                             addOpCodes("A2");
                             addOpCodes("01");
                             addOpCodes("A0");
@@ -258,6 +290,7 @@ public class CodeGen {
                         }
                         //else it's false, change the loaded variable
                         else {
+                            System.out.println("print false");
                             addOpCodes("A2");
                             addOpCodes("01");
                             addOpCodes("A0");
