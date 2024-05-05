@@ -169,6 +169,43 @@ public class CodeGen {
 
                     if(genTable.get(i).substring(0, 1).equals("(")) {
                         System.out.println("this is where strings should go");
+
+                        String currentString = genTable.get(i).substring(1, genTable.get(i).length() - 1);
+
+                        addOpCodes("A9");
+                        addOpCodes("00");
+                        addOpCodes("8D");
+                        addOpCodes(Integer.toHexString(heapCount).toUpperCase());
+                        heapCount--;
+                        addOpCodes("00");
+
+                        //Straight carbon copy of the loop from Assign, it's stupid but it works
+                        for (int y = 0; y < currentString.length(); y++) {
+                            addOpCodes("A9");
+                            addOpCodes(Integer.toHexString((int)currentString.charAt(y))); //make this uppercase eventually
+                            addOpCodes("8D");
+                            addOpCodes(Integer.toHexString(heapCount).toUpperCase());
+                            heapCount--;
+                            addOpCodes("00");
+                        }
+                        addOpCodes("A9");
+                        addOpCodes(Integer.toHexString(heapCount + 1).toUpperCase());
+                        addOpCodes("8D");
+                        addOpCodes("T" + Integer.toString(declCounter).toUpperCase());
+                        addOpCodes("XX");
+                        addOpCodes("A2");
+                        addOpCodes("02");
+                        addOpCodes("AC");
+                        addOpCodes("T" + Integer.toString(declCounter).toUpperCase());
+                        declCounter++;
+                        addOpCodes("XX");
+                        addOpCodes("FF");
+
+
+                    }
+                    else if (genTable.get(i).length() < 2) {
+                        System.out.println("This is where variables go");
+
                     }
 
                     //parse between variables and strings
