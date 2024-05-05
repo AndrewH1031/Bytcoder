@@ -71,8 +71,7 @@ public class CodeGen {
 
                     System.out.println("Assign statement");
 
-                    //System.out.println("current token is " + genTable.get(i));
-
+                    
                     //check for int or string
                     Symbol tempSymbol;
 
@@ -82,12 +81,14 @@ public class CodeGen {
                         //System.out.println(symbolOp.get(j).name);
                         //System.out.println(symbolOp.get(j).symbolType);
                         //System.out.println(newScope);
+                        //System.out.println("current token is " + genTable.get(i));
+
                         if (symbolOp.get(j).name == "int" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
                             //System.out.println("yayy!!!" + symbolOp.get(j).scope);
                             tempSymbol = symbolOp.get(j);
                             i++;
                             String tempy = "";
-                            //System.out.println("currenterrrr token is " + genTable.get(i));
+                            System.out.println("currenterrrr token is " + genTable.get(i));
 
                             addOpCodes("A9");
 
@@ -111,9 +112,9 @@ public class CodeGen {
                             //System.out.println("nooooo!!!!" + symbolOp.get(j).scope);
                             //System.out.println(symbolOp.get(j).scope);
                             tempSymbol = symbolOp.get(j);
-                            //System.out.println("current symbol is " + tempSymbol.name);
+                            System.out.println("current symbol is " + tempSymbol.name);
                             i++;
-                            //System.out.println("currenterrrr token is " + genTable.get(i));
+                            System.out.println("currenterrrr token is " + genTable.get(i));
 
                             String currentString = genTable.get(i).substring(1, genTable.get(i).length() - 1);
 
@@ -206,10 +207,32 @@ public class CodeGen {
                     else if (genTable.get(i).length() < 2) {
                         System.out.println("This is where variables go");
 
+                        addOpCodes("A2");
+
+                        for(int j = 0; j < symbolOp.size(); j++) { //expand this
+
+                            if (symbolOp.get(j).name == "int" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
+                                System.out.println("this int goes hereeeeee");
+                                addOpCodes("01");
+
+                            }
+                            else if (symbolOp.get(j).name == "boolean" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
+                                System.out.println("this boolean goes hereeeeee");
+                                addOpCodes("01");
+                            }
+
+                            else if (symbolOp.get(j).name == "string" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
+                                System.out.println("this string goes hereeeeee");
+                                addOpCodes("02");
+                            }
+                            addOpCodes("AC");
+                            addOpCodes("01"); //placeholder - upgrade this later
+                            addOpCodes("XX");
+                            addOpCodes("FF");
+                        }
                     }
 
                     //parse between variables and strings
-
 
                 break;
                 case "If":
