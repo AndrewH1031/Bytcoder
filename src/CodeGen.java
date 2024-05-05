@@ -28,7 +28,10 @@ public class CodeGen {
         System.out.println(genTable); //testing
 
         genCode();
+        //check for error (>256 opcodes)
         printCode();
+        
+        //call stack??
     }
 
     public void genCode() {
@@ -49,6 +52,7 @@ public class CodeGen {
         //Rudimentary loop to parse through our AST we passed from semantic, will get around to including all tokens
         //System.out.println("IOU one genCode");
         for(int i = 0; i < genTable.size(); i++) {
+            System.out.println("codepointer is " + opCounter);
             
             switch(genTable.get(i)) {
                 case "Open Block":
@@ -158,7 +162,7 @@ public class CodeGen {
                     addOpCodes("00");
                     addOpCodes("8D");
                     addOpCodes("T" + Integer.toString(declCounter)); //temp value to store in memory
-                    addOpCodes("XX");
+                    addOpCodes("XX"); //have to change later
                     declCounter++;
                     
                 break;
@@ -242,6 +246,7 @@ public class CodeGen {
                     }
 
                     //Checking if we want to print a boolean value instead
+                    //I should really remove the brackets on these but I guess it's fine for now....
                     else if(genTable.get(i).equals("[true]") || genTable.get(i).equals("[false]")) {
                         //If the value is true
                         if(genTable.get(i).equals("[true]")) {
@@ -267,8 +272,6 @@ public class CodeGen {
                     else {
                         System.out.println("idk what to put here");
                     }
-
-                    //parse between variables and strings (and boolean values, oops)
 
                 break;
                 case "If":
@@ -302,9 +305,10 @@ public class CodeGen {
         }
     }
 
+    //Adds our opcodes to the list
     public void addOpCodes(String newCode) {
         opCodeList.add(opCounter, newCode);
-        opCounter++;
+        opCounter++; //increment counter to let us know where we are after the addition
         
         //System.out.println("CURRENT OPCODE LIST IS " + opCodeList); //testing
     }
@@ -320,5 +324,8 @@ public class CodeGen {
             tempcount++;
         }
     }
+
+    //stack stuff goes here
+
 
 }
