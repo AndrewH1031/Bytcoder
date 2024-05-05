@@ -71,10 +71,12 @@ public class CodeGen {
 
                     System.out.println("Assign statement");
 
-                    System.out.println("current token is " + genTable.get(i));
+                    //System.out.println("current token is " + genTable.get(i));
 
                     //check for int or string
                     Symbol tempSymbol;
+
+                    
 
                     for(int j = 0; j < symbolOp.size(); j++) {
                         //System.out.println(symbolOp.get(j).name);
@@ -84,7 +86,23 @@ public class CodeGen {
                             //System.out.println("yayy!!!" + symbolOp.get(j).scope);
                             tempSymbol = symbolOp.get(j);
                             i++;
-                            System.out.println("currenterrrr token is " + genTable.get(i));
+                            String tempy = "";
+                            //System.out.println("currenterrrr token is " + genTable.get(i));
+
+                            addOpCodes("A9");
+
+                            if(genTable.get(i).substring(1, genTable.get(i).length() - 1).length() < 3) {
+                                tempy = "0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, genTable.get(i).length()-1)));
+                                addOpCodes(tempy);
+                            }
+                            else {
+                                addOpCodes(Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, genTable.get(i).length() - 1))));
+                            }
+
+                            addOpCodes("8D");
+                            addOpCodes("T0");
+                            addOpCodes("XX");
+
                             break;
                         }
 
@@ -93,11 +111,11 @@ public class CodeGen {
                             //System.out.println("nooooo!!!!" + symbolOp.get(j).scope);
                             //System.out.println(symbolOp.get(j).scope);
                             tempSymbol = symbolOp.get(j);
-                            System.out.println("current symbol is " + tempSymbol.name);
+                            //System.out.println("current symbol is " + tempSymbol.name);
                             i++;
-                            System.out.println("currenterrrr token is " + genTable.get(i));
+                            //System.out.println("currenterrrr token is " + genTable.get(i));
 
-                            String currentString = genTable.get(i).substring(1, genTable.get(i).length()-1);
+                            String currentString = genTable.get(i).substring(1, genTable.get(i).length() - 1);
 
                             addOpCodes("A9");
                             addOpCodes("00");
@@ -113,7 +131,7 @@ public class CodeGen {
                                 addOpCodes(Integer.toHexString(heapCount).toUpperCase());
                                 heapCount--;
                                 addOpCodes("00");
-                                System.out.println(currentString.charAt(x) + " is our currentString");
+                                //System.out.println(currentString.charAt(x) + " is our currentString"); //test
                             }
 
                             break;
@@ -145,7 +163,15 @@ public class CodeGen {
                 break;
                 case "Print":
                     System.out.println("Print");
+                    i++;
 
+                    System.out.println(genTable.get(i).substring(0, 1));
+
+                    if(genTable.get(i).substring(0, 1).equals("(")) {
+                        System.out.println("this is where strings should go");
+                    }
+
+                    //parse between variables and strings
 
 
                 break;
