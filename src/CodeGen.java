@@ -6,19 +6,26 @@ import java.util.ArrayList;
 public class CodeGen {
     
     ArrayList<String> genTable; //import this from Semantic
-    ArrayList<Symbol> symbolList; //project said to include this idk what to do with it yet
+    ArrayList<Symbol> symbolOp; //project said to include this idk what to do with it yet
     ArrayList<String> opCodeList = new ArrayList<>(); //should be under 256, else throw error
 
     int newScope; //Copy of scope, might need this
     //Pass existing scope over? or use it from symbol class
     int opCounter;
-    int declCounter; //Used for vardecl so we can store each variable in a unique address
+    int declCounter; //Used for vardecl so we can store each variable in a unique address 
+    int heapCount;
 
 
-    public void main(ArrayList<String> list) {
+    public void main(ArrayList<String> list, ArrayList<Symbol> symbolList) {
         //System.out.println("IOU one Code Gen");
 
         genTable = list;
+        symbolOp = symbolList;
+
+        newScope = -1;
+        heapCount = 255;
+
+        System.out.println(genTable); //testing
 
         genCode();
         printCode();
@@ -47,18 +54,80 @@ public class CodeGen {
                 case "Open Block":
                     System.out.println("oblock");
 
-                    newScope++;
+                    newScope++; //increment scope when we have a new block like usual
+                    //System.out.println("newScope is " + newScope); //testing
 
                 break;
                 case "Close Block":
                     System.out.println("closeblock");
 
-                newScope--;
+                    newScope--;
+                    //System.out.println("newScope is " + newScope); //testing
 
                 break;
                 case "Assign":
+
+                    i++;
+
                     System.out.println("Assign statement");
 
+                    System.out.println("current token is " + genTable.get(i));
+
+                    //check for int or string
+                    Symbol tempSymbol;
+
+                    for(int j = 0; j < symbolOp.size(); j++) {
+                        //System.out.println(symbolOp.get(j).name);
+                        //System.out.println(symbolOp.get(j).symbolType);
+                        //System.out.println(newScope);
+                        if (symbolOp.get(j).name == "int" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
+                            //System.out.println("yayy!!!" + symbolOp.get(j).scope);
+                            tempSymbol = symbolOp.get(j);
+                            i++;
+                            System.out.println("currenterrrr token is " + genTable.get(i));
+                            break;
+                        }
+
+
+                        else if (symbolOp.get(j).name == "string" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
+                            //System.out.println("nooooo!!!!" + symbolOp.get(j).scope);
+                            //System.out.println(symbolOp.get(j).scope);
+                            tempSymbol = symbolOp.get(j);
+                            System.out.println("current symbol is " + tempSymbol.name);
+                            i++;
+                            System.out.println("currenterrrr token is " + genTable.get(i));
+
+                            String currentString = genTable.get(i).substring(1, genTable.get(i).length()-1);
+
+                            addOpCodes("A9");
+                            addOpCodes("00");
+                            addOpCodes("8D");
+                            addOpCodes(Integer.toHexString(heapCount).toUpperCase());
+                            heapCount--;
+                            addOpCodes("00");
+                            
+                            for (int x = 0; x < currentString.length(); x++) {
+                                addOpCodes("A9");
+                                addOpCodes(Integer.toHexString((int)currentString.charAt(x)));
+                                addOpCodes("8D");
+                                addOpCodes(Integer.toHexString(heapCount).toUpperCase());
+                                heapCount--;
+                                addOpCodes("00");
+                                System.out.println(currentString.charAt(x) + " is our currentString");
+                            }
+
+                            break;
+                        }
+                    }
+
+                    /*if(genTable.get(i).length() > 2) {
+                        System.out.println("example test " + symbolOp.get(2).symbolType);
+                        System.out.println("example test " + symbolOp.get(2).name);
+                        System.out.println("example test " + symbolOp.get(2).scope);
+                        System.out.println("example test " + genTable.get(i));
+                    }*/
+                    
+                    
 
 
                 break;
@@ -69,9 +138,9 @@ public class CodeGen {
                     addOpCodes("A9");
                     addOpCodes("00");
                     addOpCodes("8D");
-                    addOpCodes("T" + Integer.toString(declCounter)); //temp, add actual values to this eventually
+                    addOpCodes("T" + Integer.toString(declCounter)); //temp value to store in memory
                     addOpCodes("XX");
-                    declCounter++; //Increment our counter to a fresh address
+                    declCounter++;
                     
                 break;
                 case "Print":
@@ -103,17 +172,20 @@ public class CodeGen {
 
     public void addOpCodes(String newCode) {
         opCodeList.add(opCounter, newCode);
-        System.out.println("CURRENT OPCODE LIST IS " + opCodeList); //testing
         opCounter++;
+        
+        //System.out.println("CURRENT OPCODE LIST IS " + opCodeList); //testing
     }
 
     public void printCode() {
         System.out.println();
         System.out.println("CODEGEN: Printing Op Codes:");
+        int tempcount = 1;
 
         //Print our opcodes as we've initialized them
         for (int i = 0; i < opCodeList.size(); i++) {
-            System.out.println(opCodeList.get(i));
+            System.out.println(tempcount + ". " + opCodeList.get(i));
+            tempcount++;
         }
     }
 
