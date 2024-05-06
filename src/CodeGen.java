@@ -2,6 +2,7 @@
 //obviously non functional right now
 
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 public class CodeGen {
     
@@ -15,6 +16,8 @@ public class CodeGen {
     int declCounter; //Used for vardecl so we can store each variable in a unique address 
     int heapCount;
 
+    boolean isNotDone = true;
+
 
     public void main(ArrayList<String> list, ArrayList<Symbol> symbolList) {
         //System.out.println("IOU one Code Gen");
@@ -26,6 +29,9 @@ public class CodeGen {
         heapCount = 255;
 
         System.out.println(genTable); //testing
+        for(int z = 0; z < symbolList.size(); z++) {
+            System.out.println(symbolList.get(z).symbolType + " ");
+        }
 
         genCode();
         //check for error (>256 opcodes)
@@ -90,16 +96,17 @@ public class CodeGen {
                         if (symbolOp.get(j).name == "int" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
                             //System.out.println("yayy!!!" + symbolOp.get(j).scope);
                             tempSymbol = symbolOp.get(j);
-                            System.out.println("current token is" + genTable.get(i));
                             i++;
                             String tempy = "";
-                            System.out.println("currenterrrr token is " + genTable.get(i));
 
                             addOpCodes("A9");
 
-                            if(genTable.get(i).substring(1, genTable.get(i).length() - 1).length() < 2) {
+                            System.out.println("message is for " + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, genTable.get(i).length() - 1))));
+
+                            if(genTable.get(i).substring(1, genTable.get(i).length() - 1).length() < 3) {
                                 tempy = "0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, genTable.get(i).length() - 1)));
                                 addOpCodes(tempy);
+                                System.out.println("tempy is " + tempy);
                             }
                             else {
                                 addOpCodes(Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, genTable.get(i).length() - 1))));
@@ -109,8 +116,28 @@ public class CodeGen {
                             addOpCodes("T0");
                             addOpCodes("XX");
 
+                            //If we've got an ID coming up, then match it
+                            if(Pattern.matches("[a-z]", genTable.get(i).substring(1, 2))) {
+                                System.out.println("right where we need to be");
+
+                            }
+                            //else it's a number, act accordingly
+                            else {
+                                System.out.println("right where we DON'T need to be");
+
+                            }
+
+
+                            
+                            
+                            //System.out.println("current gentable thingy is " + genTable.get(i));
+                            //System.out.println("i is " + i);
+                            //System.out.println("current length is " + (genTable.get(i + 1).length()));
+
                             //expand this, it's definitely not long enough
-                            //include assigning for IDs, strings and ints
+                            //include assigning for IDs that contain int values as well
+
+                            //System.out.println("where are we at?? " + genTable.get(i).substring(1, 2));
 
                             break;
                         }
@@ -249,8 +276,9 @@ public class CodeGen {
 
                         for(int j = 0; j < symbolOp.size(); j++) { //expand this
 
+
                             //Checking for an int with exact name and type as our current symbol
-                            if (symbolOp.get(j).name == "int" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
+                            if (symbolOp.get(j).name.equals("int") && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
                                 System.out.println("this int goes hereeeeee");
                                 addOpCodes("01");
 
@@ -259,13 +287,13 @@ public class CodeGen {
                             //Checking for a boolean type
 
                             //Merge this with int?
-                            else if (symbolOp.get(j).name == "boolean" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
+                            else if (symbolOp.get(j).name.equals("boolean") && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
                                 System.out.println("this boolean goes hereeeeee");
                                 addOpCodes("01");
                             }
 
                             //Lastly, check for a string type
-                            else if (symbolOp.get(j).name == "string" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
+                            else if (symbolOp.get(j).name.equals("string") && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
                                 System.out.println("this string goes hereeeeee");
                                 addOpCodes("02");
                             }
@@ -287,6 +315,7 @@ public class CodeGen {
                             addOpCodes("A0");
                             //Set the value to 1 for true
                             addOpCodes("01");
+                            addOpCodes("FF");
                         }
                         //else it's false, change the loaded variable
                         else {
@@ -296,6 +325,7 @@ public class CodeGen {
                             addOpCodes("A0");
                             //Set the value to 0 for false
                             addOpCodes("00");
+                            addOpCodes("FF");
                         }
                         
 
@@ -310,6 +340,7 @@ public class CodeGen {
                 case "If":
                     System.out.println("Ifstatement");
                     i++;
+                    System.out.println("next if is " + genTable.get(i + 1));
                     boolean notDoneYet = true;
                     boolean negation = false;
                     addOpCodes("A9");
@@ -318,6 +349,7 @@ public class CodeGen {
                     addOpCodes("T0");
                     addOpCodes("XX");
                     
+                    if(genTable.get(i).equals)
 
                         //add branching, int expr and bool checking to this
 
