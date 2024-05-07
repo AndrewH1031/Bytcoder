@@ -36,11 +36,6 @@ public class CodeGen {
         newScope = -1; //same as last time, dumb but it works
         heapCount = 255; //Heap pointer - starts at address FF and works its way down
 
-        System.out.println(genTable); //testing
-        for(int z = 0; z < symbolList.size(); z++) {
-            System.out.println(symbolList.get(z).symbolType + " ");
-        }
-
         genCode();
         addOpCodes("00");
         if(opCodeList.size() > 256) {
@@ -63,14 +58,14 @@ public class CodeGen {
         declCounter++;
         stackList.add("T0XX");
         stackList.add("T1XX");
-        System.out.println(stackList.get(stackList.size()-1));
-        System.out.println(stackList);
+        //System.out.println(stackList.get(stackList.size()-1));
+        //System.out.println(stackList);
         //System.out.println("genCode");
 
         //Rudimentary loop to parse through our AST we passed from semantic
         //System.out.println("IOU one genCode");
         for(int i = 0; i < genTable.size(); i++) {
-            System.out.println("codepointer is " + opCounter);
+            //System.out.println("codepointer is " + opCounter);
             
             switch(genTable.get(i)) {
                 case "Open Block":
@@ -210,14 +205,14 @@ public class CodeGen {
                     }
                     
 
-
+                        //Matches a string
                         else if (symbolOp.get(j).name == "string" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
                             //System.out.println("nooooo!!!!" + symbolOp.get(j).scope);
                             //System.out.println(symbolOp.get(j).scope);
                             tempSymbol = symbolOp.get(j);
-                            System.out.println("current symbol is " + tempSymbol.name);
+                            //System.out.println("current symbol is " + tempSymbol.name);
                             i++;
-                            System.out.println("currenterrrr token is " + genTable.get(i));
+                            //System.out.println("currenterrrr token is " + genTable.get(i));
 
                             String currentString = genTable.get(i).substring(1, genTable.get(i).length() - 1);
 
@@ -275,7 +270,7 @@ public class CodeGen {
                     System.out.println("Vardecl");
 
                     addOpCodes("A9");
-                    System.out.println("T" + Integer.toString(declCounter));
+                    //System.out.println("T" + Integer.toString(declCounter));
                     addOpCodes("00");
                     addOpCodes("8D");
                     addOpCodes("T" + Integer.toString(declCounter)); //temp value to store in memory
@@ -289,7 +284,7 @@ public class CodeGen {
                     System.out.println("Print");
                     i++;
 
-                    System.out.println(genTable.get(i).substring(0, 1));
+                    //System.out.println(genTable.get(i).substring(0, 1));
 
                     //Substring is a very helpful tool to grab our next token wiothout brackets, free of charge
                     if(genTable.get(i).substring(0, 1).equals("(")) {
@@ -336,7 +331,7 @@ public class CodeGen {
                         //System.out.println("This is where variables go");
 
                         addOpCodes("AC");
-                        System.out.println(stackList);
+                        //System.out.println(stackList);
                         addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
                         addOpCodes("00");
                         addOpCodes("A2");
@@ -572,6 +567,9 @@ public class CodeGen {
                 branchNum++;
 
                 break;
+
+                //Once again, a huge thank you to the folks at StackOverflow for the help on program structure:
+                //https://stackoverflow.com/questions/60924068/converting-pseudo-code-while-loop-in-to-java
                 case "While":
                     System.out.println("Whilestatement");
                     i++;
@@ -771,7 +769,6 @@ public class CodeGen {
     //ChatGPT'd this - was easy printing stack but I asked how to modify the list for each pointer value
     //Modifies our temp variables so we store them in different values in our list depending on their assignment
     public void handleStack() {
-        System.out.println(stackList);
         for(int y = 0; y < stackList.size(); y++) {
             for(int z = 0; z < opCodeList.size(); z++) {//If it appears at all
                 if(opCodeList.get(z).equals("T" + Integer.toString(y))) {
