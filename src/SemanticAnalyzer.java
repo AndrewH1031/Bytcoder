@@ -57,9 +57,11 @@ public class SemanticAnalyzer {
             System.out.println("Semantic Analysis failed with " + errors + " errors and " + warnings + " warnings");
             System.out.println();
             System.out.println("AST and Symbol Table skipped due to Semantic Analysis errors");
+            //Uncomment this bottom function to have codegen run 100% of the time on good programs
+            //codeGen.main(AST, symbolList);
         }
         else {
-            System.out.println("Semantic Analysis completed with " + errors + " errors and " + warnings + "warnings");
+            System.out.println("Semantic Analysis completed with " + errors + " errors and " + warnings + " warnings");
             System.out.println();
             System.out.println("Printing AST...");
             System.out.println();
