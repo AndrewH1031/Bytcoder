@@ -65,7 +65,7 @@ public class SemanticAnalyzer {
             System.out.println();
             AST();
             printSymbolList();
-            codeGen.main(AST);
+            codeGen.main(AST, symbolList);
         }
     }
 
@@ -338,7 +338,7 @@ public class SemanticAnalyzer {
         }
         else {
             //If we've reached this point that means our sentence is ready - add to AST and continue
-            addAST("[" + sentence + "]", depth);
+            addAST("(" + sentence + ")", depth);
             sentence = "";
         }
     }
@@ -419,7 +419,7 @@ public class SemanticAnalyzer {
 
     public void analyzeBoolOp() {
         //System.out.println("SEMANTIC: BoolOp");
-        addAST("Boolean Op", depth);
+        addAST(semanticList.get(parseCounter).name, depth);
         
         depth++;
         parseCounter = refresh(parseCounter);
