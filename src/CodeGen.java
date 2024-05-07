@@ -9,14 +9,15 @@ public class CodeGen {
     ArrayList<String> genTable; //import this from Semantic
     ArrayList<Symbol> symbolOp; //project said to include this idk what to do with it yet
     ArrayList<String> opCodeList = new ArrayList<>(); //should be under 256, else throw error
+    ArrayList<String> stackList = new ArrayList<>();
 
     int newScope; //Copy of scope, might need this
     //Pass existing scope over? or use it from symbol class
     int opCounter;
     int declCounter; //Used for vardecl so we can store each variable in a unique address 
     int heapCount; //Used to track our heap values to assign for some of our variables
-
     int errors;
+
     boolean stopAddingFirst;
     boolean stopAddingSecond;
 
@@ -27,8 +28,8 @@ public class CodeGen {
         genTable = list;
         symbolOp = symbolList;
 
-        newScope = -1;
-        heapCount = 255;
+        newScope = -1; //same as last time, dumb but it works
+        heapCount = 255; //Heap pointer - starts at address FF and works its way down
 
         System.out.println(genTable); //testing
         for(int z = 0; z < symbolList.size(); z++) {
@@ -47,13 +48,17 @@ public class CodeGen {
         else {
             System.out.println("Printing OpCodes...");
             System.out.println();
-            //handleStack(); //need to process temp codes before we can print
+            handleStack(); //need to process temp codes before we can print
             printCode();
         }
 
     }
 
     public void genCode() {
+        declCounter = 2; //Initialize our variable pointer early since we're declaring our first two temporary variables right here
+        stackList.add("T0XX");
+        stackList.add("T1XX");
+        System.out.println(stackList);
         //System.out.println("genCode");
 
         //Loop through imported AST, check to see if our AST tokens match
@@ -119,10 +124,9 @@ public class CodeGen {
 
                             addOpCodes("A9");
 
-                            System.out.println("message is for " + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, genTable.get(i).length() - 1))));
-
                             if(genTable.get(i).substring(1, genTable.get(i).length() - 1).length() < 3) {
                                 tempy = "0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, genTable.get(i).length() - 1)));
+                                tempy = tempy.toUpperCase();
                                 addOpCodes(tempy);
                                 System.out.println("tempy is " + tempy);
                             }
@@ -167,7 +171,7 @@ public class CodeGen {
                             
                             for (int x = 0; x < currentString.length(); x++) {
                                 addOpCodes("A9");
-                                addOpCodes(Integer.toHexString((int)currentString.charAt(x)));
+                                addOpCodes(Integer.toHexString((int)currentString.charAt(x)).toUpperCase());
                                 addOpCodes("8D");
                                 addOpCodes(Integer.toHexString(heapCount).toUpperCase());
                                 addOpCodes("00");
@@ -176,7 +180,7 @@ public class CodeGen {
                             }
 
                             addOpCodes("A9");
-                            addOpCodes(Integer.toHexString(heapCount + 1));
+                            addOpCodes(Integer.toHexString(heapCount + 1).toUpperCase());
                             addOpCodes("8D");
                             addOpCodes("00"); //placeholder
                             addOpCodes("XX");
@@ -214,8 +218,9 @@ public class CodeGen {
                     addOpCodes("00");
                     addOpCodes("8D");
                     addOpCodes("T" + Integer.toString(declCounter)); //temp value to store in memory
-                    System.out.println("whats the declcounter??? " + declCounter);
+                    //System.out.println("whats the declcounter??? " + declCounter);
                     addOpCodes("XX"); //have to change later
+                    stackList.add("T" + Integer.toString(declCounter) + "XX");
                     declCounter++;
                     
                 break;
@@ -227,9 +232,10 @@ public class CodeGen {
 
                     //Substring is a very helpful tool to grab our next token wiothout brackets, free of charge
                     if(genTable.get(i).substring(0, 1).equals("(")) {
-                        System.out.println("this is where strings should go");
+                        //System.out.println("this is where strings should go");
 
                         String currentString = genTable.get(i).substring(1, genTable.get(i).length() - 1);
+                        stackList.add("T" + Integer.toString(declCounter) + "XX");
 
                         addOpCodes("A9");
                         addOpCodes("00");
@@ -241,7 +247,7 @@ public class CodeGen {
                         //Straight carbon copy of the loop from Assign, it's stupid but it works
                         for (int y = 0; y < currentString.length(); y++) {
                             addOpCodes("A9");
-                            addOpCodes(Integer.toHexString((int)currentString.charAt(y))); //make this uppercase eventually
+                            addOpCodes(Integer.toHexString((int)currentString.charAt(y)).toUpperCase());
                             addOpCodes("8D");
                             addOpCodes(Integer.toHexString(heapCount).toUpperCase());
                             addOpCodes("00");
@@ -266,7 +272,7 @@ public class CodeGen {
                     //If our print statement is only one char long, then we've got an ID on our hands
                     //No need to double check our type/syntax since our previous parts of the compiler have that taken care of
                     else if (genTable.get(i).length() < 2) {
-                        System.out.println("This is where variables go");
+                        //System.out.println("This is where variables go");
 
                         addOpCodes("AC");
                         addOpCodes("00"); //placeholder - upgrade this later
@@ -276,20 +282,20 @@ public class CodeGen {
                         for(int j = 0; j < symbolOp.size(); j++) { //expand this
                             //Checking for an int with exact name and type as our current symbol
                             if (symbolOp.get(j).name.equals("int") && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
-                                System.out.println("this int goes hereeeeee");
+                                //System.out.println("this int goes hereeeeee");
                                 addOpCodes("01");
 
                             }
 
                             //Checking for a boolean type
                             else if (symbolOp.get(j).name.equals("bool") && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
-                                System.out.println("this boolean goes hereeeeee");
+                                //System.out.println("this boolean goes hereeeeee");
                                 addOpCodes("01");
                             }
 
                             //Lastly, check for a string type
                             else if (symbolOp.get(j).name.equals("string") && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
-                                System.out.println("this string goes hereeeeee");
+                                //System.out.println("this string goes hereeeeee");
                                 addOpCodes("02");
                             }
                         }
@@ -301,7 +307,7 @@ public class CodeGen {
                     else if(genTable.get(i).equals("[true]") || genTable.get(i).equals("[false]")) {
                         //If the value is true
                         if(genTable.get(i).equals("[true]")) {
-                            System.out.println("print true");
+                            //System.out.println("print true");
                             addOpCodes("A2");
                             addOpCodes("01");
                             addOpCodes("A0");
@@ -311,7 +317,7 @@ public class CodeGen {
                         }
                         //else it's false, change the loaded variable
                         else {
-                            System.out.println("print false");
+                            //System.out.println("print false");
                             addOpCodes("A2");
                             addOpCodes("01");
                             addOpCodes("A0");
@@ -373,16 +379,14 @@ public class CodeGen {
 
                     }
 
-                    
                     if(!genTable.get(i + 1).equals("==") && !genTable.get(i + 1).equals("!=") && !genTable.get(i + 1).equals("IntOp") && genTable.get(i + 1).length() > 3) {
                         stopAddingFirst = true;
-                        System.out.println("guhhhh???!" + genTable.get(i));
                         
                     }
 
                     //If we've reached our boolean statement, stop running the first loop and move on to the second
                     else if(genTable.get(i + 1).equals("==") || genTable.get(i + 1).equals("!=")) {
-                        System.out.println("yayy!!!!!!!!!!");
+                        //System.out.println("yayy!!!!!!!!!!");
                         i = i + 2; //Skip over the boolean token
                         addOpCodes("A9");
                         addOpCodes("00");
@@ -392,12 +396,10 @@ public class CodeGen {
 
                         while(stopAddingSecond == false) {
 
-                                System.out.println("current token is" + genTable.get(i));
-
-                            
+                            //System.out.println("current token is" + genTable.get(i));
 
                             if(genTable.get(i).equals("[true]")) {
-                                System.out.println("this is true, you're doing it right");
+                                //System.out.println("this is true, you're doing it right");
                                 addOpCodes("A9");
                                 addOpCodes("01");
                                 addOpCodes("6D");
@@ -408,7 +410,7 @@ public class CodeGen {
                                 addOpCodes("XX");
                             }
                             else if(genTable.get(i).equals("[false]")) {
-                                System.out.println("this is false, you're doing it right");
+                                //System.out.println("this is false, you're doing it right");
                                 addOpCodes("A9");
                                 addOpCodes("00");
                                 addOpCodes("6D");
@@ -419,7 +421,7 @@ public class CodeGen {
                                 addOpCodes("XX");
                             }
                             else if(Pattern.matches("[a-z]", genTable.get(i).substring(0, 1))) {
-                                System.out.println("this is for letters");
+                                //System.out.println("this is for letters");
                                 addOpCodes("AD");
                                 addOpCodes("00");
                                 addOpCodes("XX");
@@ -432,7 +434,7 @@ public class CodeGen {
                             }
                             else if (Pattern.matches("[0-9]", genTable.get(i).substring(1, 2))) {
                                 //Processes numbers
-                                System.out.println("this is for numbers and NOT shit");
+                                //System.out.println("this is for numbers");
                                 System.out.println("next if is NOT " + genTable.get(i).substring(1, 2));
                                 addOpCodes("A9");
                                 addOpCodes("00"); //placeholder
@@ -460,7 +462,7 @@ public class CodeGen {
 
                     else {
                         i++;
-                        System.out.println("loop again");
+                        //System.out.println("loop again");
                     }
                 }
                     
@@ -505,7 +507,19 @@ public class CodeGen {
         }
     }
 
-    //stack stuff goes here
+    //ChatGPT'd this - was easy printing stack but I asked how to modify the list for each pointer value
+    //Modifies our temp variables so we store them in different values in our list depending on their assignment
+    public void handleStack() {
+        System.out.println(stackList);
+        for(int y = 0; y < stackList.size(); y++) {
+            for(int z = 0; z < opCodeList.size(); z++) {//If it appears at all
+                if(opCodeList.get(z).equals("T" + Integer.toString(y))) {
+                    opCodeList.set(z, Integer.toHexString(opCounter));
+                }
+            }
+            opCounter++;
+        }
+    }
 
 
 }
