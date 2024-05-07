@@ -282,7 +282,7 @@ public class CodeGen {
                             }
 
                             //Checking for a boolean type
-                            else if (symbolOp.get(j).name.equals("boolean") && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
+                            else if (symbolOp.get(j).name.equals("bool") && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
                                 System.out.println("this boolean goes hereeeeee");
                                 addOpCodes("01");
                             }
@@ -346,6 +346,9 @@ public class CodeGen {
                         addOpCodes("00");
                         addOpCodes("XX");
                         addOpCodes("6D");
+                        addOpCodes("T0");
+                        addOpCodes("XX");
+                        addOpCodes("8D");
                         addOpCodes("T0");
                         addOpCodes("XX");
                         addOpCodes("8D");
