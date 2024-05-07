@@ -1,0 +1,13 @@
+{
+   int i
+   i = 5
+   print(i)
+}$
+
+{
+   string y
+   y = "helloiamacompiler"
+   print(y)
+   y = "nevermind"
+   print(y)
+}$
