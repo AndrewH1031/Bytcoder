@@ -3,8 +3,8 @@ import java.util.regex.Pattern;
 
 public class CodeGen {
     
-    ArrayList<String> genTable; //import this from Semantic
-    ArrayList<Symbol> symbolOp; //project said to include this idk what to do with it yet
+    ArrayList<String> genTable; //AST copy
+    ArrayList<Symbol> symbolOp; //symbol list copy
     ArrayList<String> opCodeList = new ArrayList<>(); //should be under 256, else throw error
     ArrayList<String> stackList = new ArrayList<>();
 
@@ -14,27 +14,34 @@ public class CodeGen {
     int declCounter; //Used for vardecl so we can store each variable in a unique address 
     int heapCount; //Used to track our heap values to assign for some of our variables
     int errors;
-    int branchNum = 0;
+    int branchNum;
     int jumpVal;
 
     boolean stopAddingFirst;
     boolean stopAddingSecond;
-    boolean notEquals;
-    boolean areWeJumping = false;
-    boolean assignLoop = false;
+
+    boolean notEquals; //For when we have a != boolop to compare to
+
+    boolean areWeJumping = false; //jump loop for when we want to set a jump value for our while loops
+    boolean assignLoop = false; //Assignment loop for intop expressions
 
     //NOTE: CodeGen currently doesn't work very well when dealing with IntOps...will try and correct this lateer!
     //Also Semantic Analyzer is still unfortunately broken...Don't assign any variables to each other yet.
+
+    //Want to ignore those pesky Semantic bugs? Hop on over to SemanticAnalyzer.java and delete the brackets underneath the first codegen call!
 
 
     public void main(ArrayList<String> list, ArrayList<Symbol> symbolList) {
         //System.out.println("IOU one Code Gen");
 
+        //Port over our symbolList and AST from semantic
         genTable = list;
         symbolOp = symbolList;
 
         newScope = -1; //same as last time, dumb but it works
         heapCount = 255; //Heap pointer - starts at address FF and works its way down
+
+        branchNum = 0; //
 
         genCode();
         addOpCodes("00");
@@ -91,7 +98,9 @@ public class CodeGen {
                             addOpCodes("T0");
                             addOpCodes("00");
                             addOpCodes("D0");
-                            //Branch this # to get back to the beginning of the loop
+
+                            //Branch this amount to get back to the beginning of our loop
+                            //Kudos to StackOverflow for the formula for reverse branching, couldn't find the exact page but it's out there and I found it immesnely helpful
                             int goBack = (255 - opCounter) + branchNum;
                             addOpCodes(Integer.toHexString(goBack));
                             areWeJumping = false;
@@ -101,19 +110,8 @@ public class CodeGen {
                 case "Assign":
 
                     i++;
-
                     System.out.println("Assign statement");
-
-                    
-                    //check for int or string
                     Symbol tempSymbol;
-
-                    
-
-                        //put id checking here
-                    //if(!genTable.get(i + 1).length > 3) || Character.isDigit()
-
-                    
 
                     for(int j = 0; j < symbolOp.size(); j++) {
                         //System.out.println(symbolOp.get(j).name);
@@ -144,7 +142,7 @@ public class CodeGen {
                             //System.out.println("next token is " + genTable.get(i + 1));
 
                             //Int expression handling - checks for the IntOp and + tokens to see if we need to add
-                            if(genTable.get(i + 1).equals("IntOp") || genTable.get(i + 1).equals("[+]") ) {
+                            if(genTable.get(i + 1).equals("IntOp") || genTable.get(i + 1).equals("[+]")) {
                                 i = i + 2;
                                 //System.out.println("next token is " + genTable.get(i + 1));
                                 i++;
@@ -178,8 +176,6 @@ public class CodeGen {
                                     addOpCodes("8D");
                                     addOpCodes("T0");
                                     addOpCodes("00");
-                                    
-
                                 }
                                 else {
                                     //Nothing...
@@ -195,16 +191,16 @@ public class CodeGen {
                                 }
                             }
                             break;
+                        
                         }
                         //If there's nothing after this, finalize the assignment
                         else if (genTable.get(i + 1).length() > 3) {
                             addOpCodes("8D");
                             addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
                             addOpCodes("00");
+                            }
                         }
-                    }
                     
-
                         //Matches a string
                         else if (symbolOp.get(j).name == "string" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
                             //System.out.println("nooooo!!!!" + symbolOp.get(j).scope);
@@ -223,6 +219,7 @@ public class CodeGen {
                             addOpCodes("00");
                             heapCount--;
                             
+                            //This is basically just a huge charlist we parse through for every string
                             for (int x = 0; x < currentString.length(); x++) {
                                 addOpCodes("A9");
                                 addOpCodes(Integer.toHexString((int)currentString.charAt(x)).toUpperCase());
@@ -275,7 +272,7 @@ public class CodeGen {
                     addOpCodes("8D");
                     addOpCodes("T" + Integer.toString(declCounter)); //temp value to store in memory
                     //System.out.println("whats the declcounter??? " + declCounter);
-                    addOpCodes("00"); //have to change later
+                    addOpCodes("00");
                     stackList.add("T" + Integer.toString(declCounter) + "XX");
                     declCounter++;
                     
@@ -543,9 +540,8 @@ public class CodeGen {
                 addOpCodes("EC");
                 addOpCodes("T1");
                 addOpCodes("00");
-                System.out.println("no equals " + notEquals);
 
-                //Thanks ChatGPT for giving me a little bit of an idea how to put this in
+                //Thanks ChatGPT for giving me a little bit of an idea how to put this in (opcode wise)
                 if(notEquals == true) {
                     addOpCodes("A9");
                     addOpCodes("00");
@@ -715,6 +711,7 @@ public class CodeGen {
                 addOpCodes("T1");
                 addOpCodes("00");
 
+                //Same thingy here from If statement
                 if(notEquals == true) {
                     addOpCodes("A9");
                     addOpCodes("00");
@@ -737,7 +734,6 @@ public class CodeGen {
                 branchNum++;
                 areWeJumping = true; //Set our jumping boolean to true, since we need to jump if the while loop isn't completed
                 
-
                 break;
                 default:
                     //testing to make sure I didn't break anything :P
