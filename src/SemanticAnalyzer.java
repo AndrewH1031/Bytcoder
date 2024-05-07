@@ -67,6 +67,8 @@ public class SemanticAnalyzer {
             System.out.println();
             AST();
             printSymbolList();
+            System.out.println();
+            System.out.println("Starting Code Gen....");
             codeGen.main(AST, symbolList);
         }
     }
@@ -595,7 +597,13 @@ public class SemanticAnalyzer {
             }
         }
         if(specialWarning > 0) {
-            System.out.println("WARNING: variables declared but never used");
+            System.out.println("WARNING: the following variables were declared but never used:");
+            System.out.println();
+            for(int i = 0; i < symbolList.size(); i++) {
+                if(symbolList.get(i).isItUsed == false) {
+                    System.out.println(symbolList.get(i).symbolType + " : in scope " + symbolList.get(i).scope);
+                }
+            }
         }
     }
 
