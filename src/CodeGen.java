@@ -25,7 +25,7 @@ public class CodeGen {
     boolean areWeJumping = false; //jump loop for when we want to set a jump value for our while loops
     boolean assignLoop = false; //Assignment loop for intop expressions
 
-    //NOTE: CodeGen currently doesn't work very well when dealing with IntOps...will try and correct this lateer!
+    //NOTE: CodeGen is currently a bit wonky when dealing with intOps in assigns, currently working on a solution for this
     //Also Semantic Analyzer is still unfortunately broken...Don't assign any variables to each other yet.
 
     //Want to ignore those pesky Semantic bugs? Hop on over to SemanticAnalyzer.java and delete the brackets underneath the first codegen call!
