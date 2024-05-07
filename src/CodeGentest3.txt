@@ -1,0 +1,15 @@
+{
+   string i
+   i = "coffeegreentea"
+   int a
+   {
+     boolean b
+     print(b)
+    }
+   print(i)
+   int b
+   b = 5
+   if(b != 7) {
+   print(a)
+   }
+}$
