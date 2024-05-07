@@ -1,4 +1,16 @@
 {
+int a
+{
+boolean b
+b = true
+if(b == true) {
+print(b)
+}
+a = 1
+}
+}$
+
+{
     int b
     int a
     b = 2 + 3
