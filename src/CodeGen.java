@@ -1,6 +1,3 @@
-//placeholder stuff tee hee
-//obviously non functional right now
-
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
@@ -17,15 +14,17 @@ public class CodeGen {
     int declCounter; //Used for vardecl so we can store each variable in a unique address 
     int heapCount; //Used to track our heap values to assign for some of our variables
     int errors;
-
     int branchNum = 0;
     int jumpVal;
-    int newerScope;
 
     boolean stopAddingFirst;
     boolean stopAddingSecond;
     boolean notEquals;
     boolean areWeJumping = false;
+    boolean assignLoop = false;
+
+    //NOTE: CodeGen currently doesn't work very well when dealing with IntOps...will try and correct this lateer!
+    //Also Semantic Analyzer is still unfortunately broken...Don't assign any variables to each other yet.
 
 
     public void main(ArrayList<String> list, ArrayList<Symbol> symbolList) {
@@ -61,8 +60,10 @@ public class CodeGen {
     }
 
     public void genCode() {
+        declCounter++;
         stackList.add("T0XX");
         stackList.add("T1XX");
+        System.out.println(stackList.get(stackList.size()-1));
         System.out.println(stackList);
         //System.out.println("genCode");
 
@@ -82,14 +83,8 @@ public class CodeGen {
                 case "Close Block":
                     System.out.println("closeblock");
 
-                    System.out.println(areWeJumping);
-                    System.out.println("current newerscope scope is " + newerScope);
-                    System.out.println("newS cope is " + newScope);
-
                     newScope--;
-                    System.out.println("newS cope is " + newScope); //testing
                     if(areWeJumping == true) {
-                        System.out.println("we did it!");
                         addOpCodes("A9");
                             addOpCodes("01");
                             addOpCodes("8D");
@@ -143,34 +138,77 @@ public class CodeGen {
                                 tempy = "0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, genTable.get(i).length() - 1)));
                                 tempy = tempy.toUpperCase();
                                 addOpCodes(tempy);
-                                System.out.println("tempy is " + tempy);
                             }
                             else {
                                 addOpCodes(Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, genTable.get(i).length() - 1))));
                             }
 
                             addOpCodes("8D");
-                            //something wrong here
                             addOpCodes("T0");
                             addOpCodes("00");
+                            //System.out.println("next token is " + genTable.get(i + 1));
 
-                            /*if(genTable.get(i + 1).equals("IntOp") || (genTable.get(i).equals("[+]"))) {
-                                System.out.println("yayyy!!!!");
-                            }*/
-
-                            //If we've got an ID coming up, then match it
-                            if(Pattern.matches("[a-z]", genTable.get(i).substring(1, 2))) {
-                                System.out.println("right where we need to be");
-
-                            }
-                            //else it's a number, act accordingly
-                            else {
-                                System.out.println("right where we DON'T need to be");
+                            //Int expression handling - checks for the IntOp and + tokens to see if we need to add
+                            if(genTable.get(i + 1).equals("IntOp") || genTable.get(i + 1).equals("[+]") ) {
+                                i = i + 2;
+                                //System.out.println("next token is " + genTable.get(i + 1));
+                                i++;
+                                //System.out.println("next token is " + genTable.get(i + 1));
                                 
+                                assignLoop = true;
+                                while(assignLoop == true) {
 
+                                //If we've got an ID coming up, then match it
+                                if(Pattern.matches("[a-z]", genTable.get(i)) && (genTable.get(i).length() < 3)) {
+                                    //System.out.println("right where we need to be");
+                                    addOpCodes("AD");
+                                    addOpCodes("00");
+                                    addOpCodes("00");
+                                    addOpCodes("6D");
+                                    addOpCodes("T0");
+                                    addOpCodes("00");
+                                    addOpCodes("8D");
+                                    addOpCodes("T0");
+                                    addOpCodes("00");
+
+                                }
+                                //else it's a number, act accordingly
+                                else if (Pattern.matches("[0-9]", genTable.get(i).substring(1, 2))) {
+                                    //System.out.println("right where we DON'T need to be");
+                                    addOpCodes("A9");
+                                    addOpCodes("00");
+                                    addOpCodes("6D");
+                                    addOpCodes("T0");
+                                    addOpCodes("00");
+                                    addOpCodes("8D");
+                                    addOpCodes("T0");
+                                    addOpCodes("00");
+                                    
+
+                                }
+                                else {
+                                    //Nothing...
+                                }
+                                if(genTable.get(i + 1).length() > 3) {
+                                    addOpCodes("8D");
+                                    addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
+                                    addOpCodes("00");
+                                    assignLoop = false;
+                                }
+                                else {
+                                    i++;
+                                }
                             }
                             break;
                         }
+                        //If there's nothing after this, finalize the assignment
+                        else if (genTable.get(i + 1).length() > 3) {
+                            addOpCodes("8D");
+                            addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
+                            addOpCodes("00");
+                        }
+                    }
+                    
 
 
                         else if (symbolOp.get(j).name == "string" && symbolOp.get(j).symbolType.equals(genTable.get(i))) {
@@ -203,7 +241,7 @@ public class CodeGen {
                             addOpCodes("A9");
                             addOpCodes(Integer.toHexString(heapCount + 1).toUpperCase());
                             addOpCodes("8D");
-                            addOpCodes("00"); //placeholder
+                            addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
                             addOpCodes("00");
 
                             break;
@@ -225,10 +263,11 @@ public class CodeGen {
                             }
 
                             addOpCodes("8D");
-                            addOpCodes("00"); //placeholder
+                            addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
                             addOpCodes("00");
                         }
                     }
+                    
 
                 break;
                 case "Variable Dec":
@@ -242,7 +281,7 @@ public class CodeGen {
                     addOpCodes("T" + Integer.toString(declCounter)); //temp value to store in memory
                     //System.out.println("whats the declcounter??? " + declCounter);
                     addOpCodes("00"); //have to change later
-                    stackList.add("T" + Integer.toString(declCounter) + "00");
+                    stackList.add("T" + Integer.toString(declCounter) + "XX");
                     declCounter++;
                     
                 break;
@@ -257,7 +296,7 @@ public class CodeGen {
                         //System.out.println("this is where strings should go");
 
                         String currentString = genTable.get(i).substring(1, genTable.get(i).length() - 1);
-                        stackList.add("T" + Integer.toString(declCounter) + "00");
+                        stackList.add("T" + Integer.toString(declCounter) + "XX");
 
                         addOpCodes("A9");
                         addOpCodes("00");
@@ -297,7 +336,8 @@ public class CodeGen {
                         //System.out.println("This is where variables go");
 
                         addOpCodes("AC");
-                        addOpCodes("00"); //placeholder - upgrade this later
+                        System.out.println(stackList);
+                        addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
                         addOpCodes("00");
                         addOpCodes("A2");
 
@@ -377,7 +417,7 @@ public class CodeGen {
                     //Matches variables
                     if(Pattern.matches("[a-z]", genTable.get(i).substring(0, 1))) {
                         addOpCodes("AD");
-                        addOpCodes("00");
+                        addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
                         addOpCodes("00");
                         addOpCodes("6D");
                         addOpCodes("T0");
@@ -415,7 +455,6 @@ public class CodeGen {
                     //If we've reached our boolean statement, move on to the second loop
                     else if(genTable.get(i + 1).equals("==") || genTable.get(i + 1).equals("!=")) {
                         if(genTable.get(i + 1).equals("!=")) {
-                            System.out.println("yipppeeeeee!!!!");
                             notEquals = true;
                         }
                         i = i + 2; //Skip over the boolean token
@@ -457,7 +496,7 @@ public class CodeGen {
                             else if(Pattern.matches("[a-z]", genTable.get(i).substring(0, 1))) {
                                 //System.out.println("this is for letters");
                                 addOpCodes("AD");
-                                addOpCodes("00");
+                                addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
                                 addOpCodes("00");
                                 addOpCodes("6D");
                                 addOpCodes("T1");
@@ -509,6 +548,7 @@ public class CodeGen {
                 addOpCodes("EC");
                 addOpCodes("T1");
                 addOpCodes("00");
+                System.out.println("no equals " + notEquals);
 
                 //Thanks ChatGPT for giving me a little bit of an idea how to put this in
                 if(notEquals == true) {
@@ -527,7 +567,7 @@ public class CodeGen {
                     addOpCodes("T0");
                     addOpCodes("00");
                 }
-                addOpCodes("DO"); //Branch instruction - here we'll initialize the jump value for this loop
+                addOpCodes("D0"); //Branch instruction - here we'll initialize the jump value for this loop
                 addOpCodes("J" + Integer.toString(branchNum));
                 branchNum++;
 
@@ -544,17 +584,19 @@ public class CodeGen {
                     stopAddingSecond = false;
                     notEquals = false;
 
+                    addOpCodes("A9");
+                    addOpCodes("00");
+                    addOpCodes("8D");
+                    addOpCodes("T0");
+                    addOpCodes("00");
+
                     while(stopAddingFirst == false) {
-                        addOpCodes("A9");
-                        addOpCodes("00");
-                        addOpCodes("8D");
-                        addOpCodes("T0");
-                        addOpCodes("00");
+                            
 
                             //Matches variables
                         if(Pattern.matches("[a-z]", genTable.get(i).substring(0, 1))) {
                             addOpCodes("AD");
-                            addOpCodes("00");
+                            addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
                             addOpCodes("00");
                             addOpCodes("6D");
                             addOpCodes("T0");
@@ -622,7 +664,7 @@ public class CodeGen {
                             else if(Pattern.matches("[a-z]", genTable.get(i).substring(0, 1))) {
                                 //System.out.println("this is for letters");
                                 addOpCodes("AD");
-                                addOpCodes("00");
+                                addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
                                 addOpCodes("00");
                                 addOpCodes("6D");
                                 addOpCodes("T1");
@@ -634,7 +676,6 @@ public class CodeGen {
                             else if (Pattern.matches("[0-9]", genTable.get(i).substring(1, 2))) {
                                 //Processes numbers
                                 //System.out.println("this is for numbers");
-                                System.out.println("next if is NOT " + genTable.get(i).substring(1, 2));
                                 addOpCodes("A9");
                                 addOpCodes("0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, 2))));
                                 addOpCodes("6D");
@@ -697,7 +738,6 @@ public class CodeGen {
                 addOpCodes("J" + Integer.toString(branchNum));
                 branchNum++;
                 areWeJumping = true; //Set our jumping boolean to true, since we need to jump if the while loop isn't completed
-                newerScope = newScope;
                 
 
                 break;
@@ -735,7 +775,7 @@ public class CodeGen {
         for(int y = 0; y < stackList.size(); y++) {
             for(int z = 0; z < opCodeList.size(); z++) {//If it appears at all
                 if(opCodeList.get(z).equals("T" + Integer.toString(y))) {
-                    opCodeList.set(z, Integer.toHexString(opCounter));
+                    opCodeList.set(z, Integer.toHexString(opCounter).toUpperCase());
                 }
             }
             opCounter++;
