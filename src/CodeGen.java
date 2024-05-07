@@ -333,13 +333,18 @@ public class CodeGen {
                     }
 
                 break;
+
+                //If statements - we're gonna take the long way around with this....
                 case "If":
                     System.out.println("Ifstatement");
                     i++;
-                    System.out.println("next if is " + genTable.get(i).substring(0, 1));
+                    //System.out.println("next if is " + genTable.get(i).substring(0, 1));
+
+                    //Sets both of our loop boolean values to false, so we don't accidentally trigger a loop
                     stopAddingFirst = false;
                     stopAddingSecond = false;
-                //Initialize our first element of the if statement
+
+                //While our first loop variable is active, search for and add tokens we find into memory
                 while(stopAddingFirst == false) {
                     addOpCodes("A9");
                     addOpCodes("00");
@@ -347,6 +352,7 @@ public class CodeGen {
                     addOpCodes("T0");
                     addOpCodes("XX");
 
+                    //Matches variables
                     if(Pattern.matches("[a-z]", genTable.get(i).substring(0, 1))) {
                         addOpCodes("AD");
                         addOpCodes("00");
@@ -361,12 +367,11 @@ public class CodeGen {
                         addOpCodes("T0");
                         addOpCodes("XX");
                     }
-                    else if (Pattern.matches("[0-9]", genTable.get(i).substring(1, 2))) {
-                        //Processes numbers
 
-                        //System.out.println("next if is " + genTable.get(i).substring(1, 2));
+                    //Matches ints
+                    else if (Pattern.matches("[0-9]", genTable.get(i).substring(1, 2))) {
                         addOpCodes("A9");
-                        addOpCodes("00"); //placeholder
+                        addOpCodes("0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, 2))));
                         addOpCodes("6D");
                         addOpCodes("T0");
                         addOpCodes("XX");
@@ -374,19 +379,19 @@ public class CodeGen {
                         addOpCodes("T0");
                         addOpCodes("XX");
                     }
+
                     else {
                         //Do nothing, only way we should be getting here is if we have an IntOp or [+] token
 
                     }
 
+                    //If we've reached the end of our loop (when the token size > 3, usually meaning there's a close block up ahead), then break out of the loop
                     if(!genTable.get(i + 1).equals("==") && !genTable.get(i + 1).equals("!=") && !genTable.get(i + 1).equals("IntOp") && genTable.get(i + 1).length() > 3) {
                         stopAddingFirst = true;
-                        
                     }
 
-                    //If we've reached our boolean statement, stop running the first loop and move on to the second
+                    //If we've reached our boolean statement, move on to the second loop
                     else if(genTable.get(i + 1).equals("==") || genTable.get(i + 1).equals("!=")) {
-                        //System.out.println("yayy!!!!!!!!!!");
                         i = i + 2; //Skip over the boolean token
                         addOpCodes("A9");
                         addOpCodes("00");
@@ -394,12 +399,14 @@ public class CodeGen {
                         addOpCodes("T1"); //Increment our temp values a bit to accommodate for our new half of the operand
                         addOpCodes("XX");
 
+                        //This loop handles the second half of the expression
+                        //I probably could have combined both loops into one thing, but whatever....
                         while(stopAddingSecond == false) {
 
                             //System.out.println("current token is" + genTable.get(i));
 
                             if(genTable.get(i).equals("[true]")) {
-                                //System.out.println("this is true, you're doing it right");
+                                //Stores our true boolean value
                                 addOpCodes("A9");
                                 addOpCodes("01");
                                 addOpCodes("6D");
@@ -410,6 +417,7 @@ public class CodeGen {
                                 addOpCodes("XX");
                             }
                             else if(genTable.get(i).equals("[false]")) {
+                                //Stores our false boolean value
                                 //System.out.println("this is false, you're doing it right");
                                 addOpCodes("A9");
                                 addOpCodes("00");
@@ -437,7 +445,7 @@ public class CodeGen {
                                 //System.out.println("this is for numbers");
                                 System.out.println("next if is NOT " + genTable.get(i).substring(1, 2));
                                 addOpCodes("A9");
-                                addOpCodes("00"); //placeholder
+                                addOpCodes("0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, 2))));
                                 addOpCodes("6D");
                                 addOpCodes("T0");
                                 addOpCodes("XX");
@@ -449,10 +457,14 @@ public class CodeGen {
                                 //Do nothing, only way we should be getting here is if we run into a close block token
 
                             }
+
+                            //If we run into an ending token (NOT intop though), then we break out of the second loop
                             if((genTable.get(i + 1).length() > 3) && (!genTable.get(i + 1).equals("IntOp")))  {
-                                System.out.println("gerrr" + genTable.get(i + 1));
                                 stopAddingSecond = true;
-                            } else {
+                            }
+                            
+                            //Else we're not done, keep looping
+                            else {
                                 i++;
                             }
                         }
@@ -465,11 +477,6 @@ public class CodeGen {
                         //System.out.println("loop again");
                     }
                 }
-                    
-                    //if(genTable.get(i).equals)
-
-                        //add branching, int expr and bool checking to this
-
 
                 break;
                 case "While":
