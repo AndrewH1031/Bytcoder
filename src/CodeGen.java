@@ -7,6 +7,7 @@ public class CodeGen {
     ArrayList<Symbol> symbolOp; //symbol list copy
     ArrayList<String> opCodeList = new ArrayList<>(); //should be under 256, else throw error
     ArrayList<String> stackList = new ArrayList<>();
+    ArrayList<String> jump = new ArrayList<>(); //array to store our jump values for while loops
 
     int newScope; //Copy of scope, might need this
     //Pass existing scope over? or use it from symbol class
@@ -16,6 +17,7 @@ public class CodeGen {
     int errors;
     int branchNum;
     int jumpVal;
+    int jumpToHere = 0; //Jump value we want to keep track of
 
     boolean stopAddingFirst;
     boolean stopAddingSecond;
@@ -88,22 +90,22 @@ public class CodeGen {
                     newScope--;
                     if(areWeJumping == true) {
                         addOpCodes("A9");
-                            addOpCodes("01");
-                            addOpCodes("8D");
-                            addOpCodes("T0");
-                            addOpCodes("00");
-                            addOpCodes("A2");
-                            addOpCodes("02");
-                            addOpCodes("EC");
-                            addOpCodes("T0");
-                            addOpCodes("00");
-                            addOpCodes("D0");
+                        addOpCodes("01");
+                        addOpCodes("8D");
+                        addOpCodes("T0");
+                        addOpCodes("00");
+                        addOpCodes("A2");
+                        addOpCodes("02");
+                        addOpCodes("EC");
+                        addOpCodes("T0");
+                        addOpCodes("00");
+                        addOpCodes("D0");
 
-                            //Branch this amount to get back to the beginning of our loop
-                            //Kudos to StackOverflow for the formula for reverse branching, couldn't find the exact page but it's out there and I found it immesnely helpful
-                            int goBack = (255 - opCounter) + branchNum;
-                            addOpCodes(Integer.toHexString(goBack));
-                            areWeJumping = false;
+                        //Branch this amount to get back to the beginning of our loop
+                        //Kudos to StackOverflow for the formula for reverse branching, couldn't find the exact page but it's out there and I found it immensely helpful
+                        jumpToHere = (255 - opCounter) + branchNum;
+                        addOpCodes(Integer.toHexString(jumpToHere).toUpperCase());
+                        areWeJumping = false;
                     }
 
                 break;
@@ -731,6 +733,7 @@ public class CodeGen {
 
                 addOpCodes("DO"); //Branch instruction - here we'll initialize the jump value for this loop
                 addOpCodes("J" + Integer.toString(branchNum));
+                jump.add("J" + Integer.toHexString(opCounter)); //Adds the counter value we want to branch to in our jump table to keep track of
                 branchNum++;
                 areWeJumping = true; //Set our jumping boolean to true, since we need to jump if the while loop isn't completed
                 
@@ -772,6 +775,20 @@ public class CodeGen {
                 }
             }
             opCounter++;
+        }
+        handleJump(); //might as well call this directly
+    }
+
+    public void handleJump() {
+        //Initializes jump values for our while loops
+        for(int k = 0; k < jump.size(); k++) {
+            for(int l = 0; l < opCodeList.size(); l++) {
+                if(opCodeList.get(l).equals("J" + Integer.toString(k))) {//J is used as a defining tag for our jumptable parsing
+                    //System.out.println(jump.get(k).substring(1, 3));
+                    opCodeList.set(l, Integer.toHexString(Integer.valueOf(jump.get(k).substring(1, 3)))); //Set our new jump value based on the 
+                    //System.out.println(opCodeList.get(l));
+                }
+            }
         }
     }
 
