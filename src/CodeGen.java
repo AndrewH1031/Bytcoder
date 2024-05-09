@@ -18,6 +18,7 @@ public class CodeGen {
     int branchNum;
     int jumpVal;
     int jumpToHere = 0; //Jump value we want to keep track of
+    int pastopCount;
 
     boolean stopAddingFirst;
     boolean stopAddingSecond;
@@ -25,6 +26,7 @@ public class CodeGen {
     boolean notEquals; //For when we have a != boolop to compare to
 
     boolean areWeJumping = false; //jump loop for when we want to set a jump value for our while loops
+    boolean weAreIffing = false;
     boolean assignLoop = false; //Assignment loop for intop expressions
 
     //NOTE: CodeGen is currently a bit wonky when dealing with intOps in assigns, currently working on a solution for this
@@ -43,7 +45,7 @@ public class CodeGen {
         newScope = -1; //same as last time, dumb but it works
         heapCount = 255; //Heap pointer - starts at address FF and works its way down
 
-        branchNum = 0; //
+        branchNum = 0; //sets our current address as a reference for our while jump
 
         genCode();
         addOpCodes("00");
@@ -58,7 +60,8 @@ public class CodeGen {
             System.out.println("Printing OpCodes...");
             System.out.println();
             handleStack(); //need to process temp codes before we can print
-            printCode();
+            handleJump();
+            printCode(); 
         }
 
     }
@@ -88,6 +91,21 @@ public class CodeGen {
                     System.out.println("closeblock");
 
                     newScope--;
+
+                    //If we've got an if loop, we need to jump based on when our lastpointer was set
+                    if(weAreIffing == true) {
+                        //System.out.println("there's supposed to be an if loop here you goober");
+                        int ifJumping = opCounter - pastopCount;
+                        for(int g = 0; g < jump.size(); g++) {
+                            //Padding out the array to patch my spaghetti-code handleJump function
+                            if(jump.get(g).equals("J" + pastopCount)) {
+                                jump.set(g, "00" + Integer.toHexString(ifJumping));
+                            }
+                        }
+                        weAreIffing = false;
+                    }
+
+                    //If we've got a while loop, Initialize a loop program and 
                     if(areWeJumping == true) {
                         addOpCodes("A9");
                         addOpCodes("01");
@@ -101,7 +119,7 @@ public class CodeGen {
                         addOpCodes("00");
                         addOpCodes("D0");
 
-                        //Branch this amount to get back to the beginning of our loop
+                        //Branch this amount to loop backwards to the beginning
                         //Kudos to StackOverflow for the formula for reverse branching, couldn't find the exact page but it's out there and I found it immensely helpful
                         jumpToHere = (255 - opCounter) + branchNum;
                         addOpCodes(Integer.toHexString(jumpToHere).toUpperCase());
@@ -144,58 +162,65 @@ public class CodeGen {
                             //System.out.println("next token is " + genTable.get(i + 1));
 
                             //Int expression handling - checks for the IntOp and + tokens to see if we need to add
+                            //Works a bit weirdly sometimes, please be patient with it
                             if(genTable.get(i + 1).equals("IntOp") || genTable.get(i + 1).equals("[+]")) {
-                                i = i + 2;
-                                //System.out.println("next token is " + genTable.get(i + 1));
-                                i++;
-                                //System.out.println("next token is " + genTable.get(i + 1));
+                                i = i + 3; //Skip past our intop AND + tokens
                                 
-                                assignLoop = true;
+                                assignLoop = true; //Setting this just in case
+
+                                //For the length of our intop, parse through 
                                 while(assignLoop == true) {
 
-                                //If we've got an ID coming up, then match it
-                                if(Pattern.matches("[a-z]", genTable.get(i)) && (genTable.get(i).length() < 3)) {
-                                    //System.out.println("right where we need to be");
-                                    addOpCodes("AD");
-                                    addOpCodes("00");
-                                    addOpCodes("00");
-                                    addOpCodes("6D");
-                                    addOpCodes("T0");
-                                    addOpCodes("00");
-                                    addOpCodes("8D");
-                                    addOpCodes("T0");
-                                    addOpCodes("00");
+                                    //If we've got an ID coming up, then match it
+                                    if(Pattern.matches("[a-z]", genTable.get(i)) && (genTable.get(i).length() < 3)) {
+                                        //System.out.println("right where we need to be");
+                                        addOpCodes("AD");
+                                        addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
+                                        addOpCodes("00");
+                                        addOpCodes("6D");
+                                        addOpCodes("T0");
+                                        addOpCodes("00");
+                                        addOpCodes("8D");
+                                        addOpCodes("T0");
+                                        addOpCodes("00");
 
+                                    }
+
+                                    //else it's a number, act accordingly
+                                    else if (Pattern.matches("[0-9]", genTable.get(i).substring(1, 2))) {
+                                        //System.out.println("right where we DON'T need to be");
+                                        addOpCodes("A9");
+                                        addOpCodes("00");
+                                        addOpCodes("6D");
+                                        addOpCodes("T0");
+                                        addOpCodes("00");
+                                        addOpCodes("8D");
+                                        addOpCodes("T0");
+                                        addOpCodes("00");
+                                    }
+
+                                    else {
+                                        //Nothing...this will catch other intops
+                                    }
+
+                                    //If there's nothing more in the assignment (or if it's not just an Intop), terminate it and break out of the loop.
+                                    if((genTable.get(i + 1).length() > 3) && (!genTable.get(i).equals("IntOp"))) {
+                                        addOpCodes("8D");
+                                        addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
+                                        addOpCodes("00");
+                                        assignLoop = false;
+                                    }
+
+                                    else {
+                                        i++;
+                                    }
                                 }
-                                //else it's a number, act accordingly
-                                else if (Pattern.matches("[0-9]", genTable.get(i).substring(1, 2))) {
-                                    //System.out.println("right where we DON'T need to be");
-                                    addOpCodes("A9");
-                                    addOpCodes("00");
-                                    addOpCodes("6D");
-                                    addOpCodes("T0");
-                                    addOpCodes("00");
-                                    addOpCodes("8D");
-                                    addOpCodes("T0");
-                                    addOpCodes("00");
-                                }
-                                else {
-                                    //Nothing...
-                                }
-                                if(genTable.get(i + 1).length() > 3) {
-                                    addOpCodes("8D");
-                                    addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
-                                    addOpCodes("00");
-                                    assignLoop = false;
-                                }
-                                else {
-                                    i++;
-                                }
+
+                                break;
+
                             }
-                            break;
-                        
-                        }
-                        //If there's nothing after this, finalize the assignment
+                        //If there's nothing after this, finalize the assignment by storing it in memory
+                        //This also doubles as a backup storage command if we run into problems above
                         else if (genTable.get(i + 1).length() > 3) {
                             addOpCodes("8D");
                             addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
@@ -384,7 +409,7 @@ public class CodeGen {
                     }
 
                     else {
-                        
+                        //More nothing....   
                     }
 
                 break;
@@ -562,6 +587,11 @@ public class CodeGen {
                 }
                 addOpCodes("D0"); //Branch instruction - here we'll initialize the jump value for this loop
                 addOpCodes("J" + Integer.toString(branchNum));
+                jump.add("J" + opCounter);
+                
+                //Words cannot describe how terrible this looks, I really should have just made a separate class for this
+                pastopCount = opCounter;
+                weAreIffing = true;
                 branchNum++;
 
                 break;
@@ -588,8 +618,7 @@ public class CodeGen {
 
                     while(stopAddingFirst == false) {
                             
-
-                            //Matches variables
+                        //Matches variables
                         if(Pattern.matches("[a-z]", genTable.get(i).substring(0, 1))) {
                             addOpCodes("AD");
                             addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
@@ -776,7 +805,6 @@ public class CodeGen {
             }
             opCounter++;
         }
-        handleJump(); //might as well call this directly
     }
 
     public void handleJump() {
@@ -785,12 +813,14 @@ public class CodeGen {
             for(int l = 0; l < opCodeList.size(); l++) {
                 if(opCodeList.get(l).equals("J" + Integer.toString(k))) {//J is used as a defining tag for our jumptable parsing
                     //System.out.println(jump.get(k).substring(1, 3));
-                    opCodeList.set(l, Integer.toHexString(Integer.valueOf(jump.get(k).substring(1, 3)))); //Set our new jump value based on the 
+                    opCodeList.set(l, Integer.toHexString(Integer.valueOf(jump.get(k).substring(1, 3)))); //Set our new jump value
+                    if(opCodeList.get(l).length() < 2) {
+                        //I'm sure there's a less egregious way to do this
+                        opCodeList.set(l, "0" + Integer.toHexString(Integer.valueOf(jump.get(k).substring(1, 3))));
+                    }
                     //System.out.println(opCodeList.get(l));
                 }
             }
         }
     }
-
-
 }
