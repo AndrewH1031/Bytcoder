@@ -15,9 +15,9 @@ public class CodeGen {
     int declCounter; //Used for vardecl so we can store each variable in a unique address 
     int heapCount; //Used to track our heap values to assign for some of our variables
     int errors;
-    int branchNum;
+    int branchNum; //Helps with determining jump values for while statements
     int jumpVal;
-    int jumpToHere = 0; //Jump value we want to keep track of
+    int jumpToHere = 0; //Jump value we want to keep track of for loops
     int pastopCount;
 
     boolean stopAddingFirst;
@@ -25,14 +25,14 @@ public class CodeGen {
 
     boolean notEquals; //For when we have a != boolop to compare to
 
-    boolean areWeJumping = false; //jump loop for when we want to set a jump value for our while loops
-    boolean weAreIffing = false;
+    boolean areWeJumping = false; //jump boolean for when we want to set a jump value for our while loops
+    boolean weAreIffing = false; //bool for handling if statements
     boolean assignLoop = false; //Assignment loop for intop expressions
 
     //NOTE: CodeGen is currently a bit wonky when dealing with intOps in assigns, currently working on a solution for this
     //Also Semantic Analyzer is still unfortunately broken...Don't assign any variables to each other yet.
 
-    //Want to ignore those pesky Semantic bugs? Hop on over to SemanticAnalyzer.java and delete the brackets underneath the first codegen call!
+    //Want to ignore those pesky Semantic bugs? Hop on over to SemanticAnalyzer.java and delete the brackets underneath the first codegen call in the analyzeProgram block!!
 
 
     public void main(ArrayList<String> list, ArrayList<Symbol> symbolList) {
@@ -57,22 +57,23 @@ public class CodeGen {
             System.out.println("CODE GEN: OPCODE GENERATION SKIPPED DUE TO CODE GEN ERORRS");
         }
         else {
-            System.out.println("Printing OpCodes...");
+            System.out.println("CODE GEN: Code Generation completed with " + errors + " errors.");
             System.out.println();
             handleStack(); //need to process temp codes before we can print
-            handleJump();
-            printCode(); 
+            handleJump(); //replace jump values for if and while
+            printCode(); //print this mess
         }
 
     }
 
     public void genCode() {
+
+        //Initialize the first two temp values that we want to use for storing in our stack, we can use these to insert into any value to be determined
+        //I realized halfway through that I was accidentally putting T0 or T1 on most of my temp opCodes and I really don't want to go back over that manually, so if
+        //you see anything that draws from stack there you go it's a brand new temp code
         declCounter++;
         stackList.add("T0XX");
         stackList.add("T1XX");
-        //System.out.println(stackList.get(stackList.size()-1));
-        //System.out.println(stackList);
-        //System.out.println("genCode");
 
         //Rudimentary loop to parse through our AST we passed from semantic
         //System.out.println("IOU one genCode");
@@ -105,7 +106,7 @@ public class CodeGen {
                         weAreIffing = false;
                     }
 
-                    //If we've got a while loop, Initialize a loop program and 
+                    //If we've got a while loop, Initialize a loop program and set our jump values
                     if(areWeJumping == true) {
                         addOpCodes("A9");
                         addOpCodes("01");
@@ -310,7 +311,7 @@ public class CodeGen {
 
                     //System.out.println(genTable.get(i).substring(0, 1));
 
-                    //Substring is a very helpful tool to grab our next token wiothout brackets, free of charge
+                    //Substring is a very helpful tool to grab our next token without brackets, free of charge
                     if(genTable.get(i).substring(0, 1).equals("(")) {
                         //System.out.println("this is where strings should go");
 
@@ -425,174 +426,172 @@ public class CodeGen {
                     stopAddingSecond = false;
                     notEquals = false;
 
-                //While our first loop variable is active, search for and add tokens we find into memory
-                while(stopAddingFirst == false) {
-                    addOpCodes("A9");
-                    addOpCodes("00");
-                    addOpCodes("8D");
-                    addOpCodes("T0");
-                    addOpCodes("00");
-
-                    //Matches variables
-                    if(Pattern.matches("[a-z]", genTable.get(i).substring(0, 1))) {
-                        addOpCodes("AD");
-                        addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
-                        addOpCodes("00");
-                        addOpCodes("6D");
-                        addOpCodes("T0");
-                        addOpCodes("00");
-                        addOpCodes("8D");
-                        addOpCodes("T0");
-                        addOpCodes("00");
-                        addOpCodes("8D");
-                        addOpCodes("T0");
-                        addOpCodes("00");
-                    }
-
-                    //Matches ints
-                    else if (Pattern.matches("[0-9]", genTable.get(i).substring(1, 2))) {
-                        addOpCodes("A9");
-                        addOpCodes("0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, 2))));
-                        addOpCodes("6D");
-                        addOpCodes("T0");
-                        addOpCodes("00");
-                        addOpCodes("8D");
-                        addOpCodes("T0");
-                        addOpCodes("00");
-                    }
-
-                    else {
-                        //Do nothing, only way we should be getting here is if we have an IntOp or [+] token
-
-                    }
-
-                    //If we've reached the end of our loop (when the token size > 3, usually meaning there's a close block up ahead), then break out of the loop
-                    if(!genTable.get(i + 1).equals("==") && !genTable.get(i + 1).equals("!=") && !genTable.get(i + 1).equals("IntOp") && genTable.get(i + 1).length() > 3) {
-                        stopAddingFirst = true;
-                    }
-
-                    //If we've reached our boolean statement, move on to the second loop
-                    else if(genTable.get(i + 1).equals("==") || genTable.get(i + 1).equals("!=")) {
-                        if(genTable.get(i + 1).equals("!=")) {
-                            notEquals = true;
-                        }
-                        i = i + 2; //Skip over the boolean token
+                    //While our first loop variable is active, search for and add tokens we find into memory
+                    while(stopAddingFirst == false) {
                         addOpCodes("A9");
                         addOpCodes("00");
                         addOpCodes("8D");
-                        addOpCodes("T1"); //Increment our temp values a bit to accommodate for our new half of the operand
+                        addOpCodes("T0");
                         addOpCodes("00");
 
-                        //This loop handles the second half of the expression
-                        //I probably could have combined both loops into one thing, but whatever....
-                        while(stopAddingSecond == false) {
-
-                            //System.out.println("current token is" + genTable.get(i));
-
-                            if(genTable.get(i).equals("[true]")) {
-                                //Stores our true boolean value
-                                addOpCodes("A9");
-                                addOpCodes("01");
-                                addOpCodes("6D");
-                                addOpCodes("T1");
-                                addOpCodes("00");
-                                addOpCodes("8D");
-                                addOpCodes("T1");
-                                addOpCodes("00");
-                            }
-                            else if(genTable.get(i).equals("[false]")) {
-                                //Stores our false boolean value
-                                //System.out.println("this is false, you're doing it right");
-                                addOpCodes("A9");
-                                addOpCodes("00");
-                                addOpCodes("6D");
-                                addOpCodes("T1");
-                                addOpCodes("00");
-                                addOpCodes("8D");
-                                addOpCodes("T1");
-                                addOpCodes("00");
-                            }
-                            else if(Pattern.matches("[a-z]", genTable.get(i).substring(0, 1))) {
-                                //System.out.println("this is for letters");
-                                addOpCodes("AD");
-                                addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
-                                addOpCodes("00");
-                                addOpCodes("6D");
-                                addOpCodes("T1");
-                                addOpCodes("00");
-                                addOpCodes("8D");
-                                addOpCodes("T1");
-                                addOpCodes("00");
-                            }
-                            else if (Pattern.matches("[0-9]", genTable.get(i).substring(1, 2))) {
-                                //Processes numbers
-                                //System.out.println("this is for numbers");
-                                System.out.println("next if is NOT " + genTable.get(i).substring(1, 2));
-                                addOpCodes("A9");
-                                addOpCodes("0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, 2))));
-                                addOpCodes("6D");
-                                addOpCodes("T1");
-                                addOpCodes("00");
-                                addOpCodes("8D");
-                                addOpCodes("T1");
-                                addOpCodes("00");
-                            }
-                            else {
-                                //Do nothing, only way we should be getting here is if we run into a close block token
-
-                            }
-
-                            //If we run into an ending token (NOT intop though), then we break out of the second loop
-                            if((genTable.get(i + 1).length() > 3) && (!genTable.get(i + 1).equals("IntOp")))  {
-                                stopAddingSecond = true;
-                            }
-                            
-                            //Else we're not done, keep looping
-                            else {
-                                i++;
-                            }
+                        //Matches variables
+                        if(Pattern.matches("[a-z]", genTable.get(i).substring(0, 1))) {
+                            addOpCodes("AD");
+                            addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
+                            addOpCodes("00");
+                            addOpCodes("6D");
+                            addOpCodes("T0");
+                            addOpCodes("00");
+                            addOpCodes("8D");
+                            addOpCodes("T0");
+                            addOpCodes("00");
+                            addOpCodes("8D");
+                            addOpCodes("T0");
+                            addOpCodes("00");
                         }
-                        stopAddingFirst = true;
 
+                        //Matches ints
+                        else if (Pattern.matches("[0-9]", genTable.get(i).substring(1, 2))) {
+                            addOpCodes("A9");
+                            addOpCodes("0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, 2))));
+                            addOpCodes("6D");
+                            addOpCodes("T0");
+                            addOpCodes("00");
+                            addOpCodes("8D");
+                            addOpCodes("T0");
+                            addOpCodes("00");
+                        }
+
+                        else {
+                            //Do nothing, only way we should be getting here is if we have an IntOp or [+] token
+
+                        }
+
+                        //If we've reached the end of our loop (when the token size > 3, usually meaning there's a close block up ahead), then break out of the loop
+                        if(!genTable.get(i + 1).equals("==") && !genTable.get(i + 1).equals("!=") && !genTable.get(i + 1).equals("IntOp") && genTable.get(i + 1).length() > 3) {
+                            stopAddingFirst = true;
+                        }
+
+                        //If we've reached our boolean statement, move on to the second loop
+                        else if(genTable.get(i + 1).equals("==") || genTable.get(i + 1).equals("!=")) {
+                            if(genTable.get(i + 1).equals("!=")) {
+                                notEquals = true;
+                            }
+                            i = i + 2; //Skip over the boolean token
+                            addOpCodes("A9");
+                            addOpCodes("00");
+                            addOpCodes("8D");
+                            addOpCodes("T1"); //Increment our temp values a bit to accommodate for our new half of the operand
+                            addOpCodes("00");
+
+                            //This loop handles the second half of the expression
+                            //I probably could have combined both loops into one thing, but whatever....
+                            while(stopAddingSecond == false) {
+
+                                //System.out.println("current token is" + genTable.get(i));
+
+                                if(genTable.get(i).equals("[true]")) {
+                                    //Stores our true boolean value
+                                    addOpCodes("A9");
+                                    addOpCodes("01");
+                                    addOpCodes("6D");
+                                    addOpCodes("T1");
+                                    addOpCodes("00");
+                                    addOpCodes("8D");
+                                    addOpCodes("T1");
+                                    addOpCodes("00");
+                                }
+                                else if(genTable.get(i).equals("[false]")) {
+                                    //Stores our false boolean value
+                                    //System.out.println("this is false, you're doing it right");
+                                    addOpCodes("A9");
+                                    addOpCodes("00");
+                                    addOpCodes("6D");
+                                    addOpCodes("T1");
+                                    addOpCodes("00");
+                                    addOpCodes("8D");
+                                    addOpCodes("T1");
+                                    addOpCodes("00");
+                                }
+                                else if(Pattern.matches("[a-z]", genTable.get(i).substring(0, 1))) {
+                                    //System.out.println("this is for letters");
+                                    addOpCodes("AD");
+                                    addOpCodes(stackList.get(stackList.size()-1).substring(0, 2));
+                                    addOpCodes("00");
+                                    addOpCodes("6D");
+                                    addOpCodes("T1");
+                                    addOpCodes("00");
+                                    addOpCodes("8D");
+                                    addOpCodes("T1");
+                                    addOpCodes("00");
+                                }
+                                else if (Pattern.matches("[0-9]", genTable.get(i).substring(1, 2))) {
+                                    //Processes numbers
+                                    //System.out.println("this is for numbers");
+                                    addOpCodes("A9");
+                                    addOpCodes("0" + Integer.toHexString(Integer.valueOf(genTable.get(i).substring(1, 2))));
+                                    addOpCodes("6D");
+                                    addOpCodes("T1");
+                                    addOpCodes("00");
+                                    addOpCodes("8D");
+                                    addOpCodes("T1");
+                                    addOpCodes("00");
+                                }
+                                else {
+                                    //Do nothing, only way we should be getting here is if we run into a close block token
+
+                                }
+
+                                //If we run into an ending token (NOT intop though), then we break out of the second loop
+                                if((genTable.get(i + 1).length() > 3) && (!genTable.get(i + 1).equals("IntOp")))  {
+                                    stopAddingSecond = true;
+                                }
+                                
+                                //Else we're not done, keep looping
+                                else {
+                                    i++;
+                                }
+                            }
+                            stopAddingFirst = true;
+                        }
+
+                        else {
+                            i++;
+                            //System.out.println("loop again");
+                        }
                     }
-
-                    else {
-                        i++;
-                        //System.out.println("loop again");
-                    }
-                }
-                addOpCodes("AE");
-                addOpCodes("T0");
-                addOpCodes("00");
-                addOpCodes("EC");
-                addOpCodes("T1");
-                addOpCodes("00");
-
-                //Thanks ChatGPT for giving me a little bit of an idea how to put this in (opcode wise)
-                if(notEquals == true) {
-                    addOpCodes("A9");
-                    addOpCodes("00");
-                    addOpCodes("D0");
-                    addOpCodes("02");
-                    addOpCodes("A9");
-                    addOpCodes("01");
-                    addOpCodes("A2");
-                    addOpCodes("00");
-                    addOpCodes("8D");
+                    addOpCodes("AE");
                     addOpCodes("T0");
                     addOpCodes("00");
                     addOpCodes("EC");
-                    addOpCodes("T0");
+                    addOpCodes("T1");
                     addOpCodes("00");
-                }
-                addOpCodes("D0"); //Branch instruction - here we'll initialize the jump value for this loop
-                addOpCodes("J" + Integer.toString(branchNum));
-                jump.add("J" + opCounter);
-                
-                //Words cannot describe how terrible this looks, I really should have just made a separate class for this
-                pastopCount = opCounter;
-                weAreIffing = true;
-                branchNum++;
+
+                    //Thanks ChatGPT for giving me a little bit of an idea how to put this in (opcode wise)
+                    if(notEquals == true) {
+                        addOpCodes("A9");
+                        addOpCodes("00");
+                        addOpCodes("D0");
+                        addOpCodes("02");
+                        addOpCodes("A9");
+                        addOpCodes("01");
+                        addOpCodes("A2");
+                        addOpCodes("00");
+                        addOpCodes("8D");
+                        addOpCodes("T0");
+                        addOpCodes("00");
+                        addOpCodes("EC");
+                        addOpCodes("T0");
+                        addOpCodes("00");
+                    }
+                    addOpCodes("D0"); //Branch instruction - here we'll initialize the jump value for this loop
+                    addOpCodes("J" + Integer.toString(branchNum)); //Temporary jump value to the code list
+                    jump.add("J" + opCounter);
+                    
+                    //Words cannot describe how terrible this looks, I really should have just made a separate class for this
+                    pastopCount = opCounter;
+                    weAreIffing = true;
+                    branchNum++;
 
                 break;
 
@@ -651,7 +650,7 @@ public class CodeGen {
 
                     }
 
-                    //If we've reached the end of our loop (when the token size > 3, usually meaning there's a close block up ahead), then break out of the loop
+                    //If we've reached the end of our loop (when the token size > 3, usually meaning there's a close block token up ahead), then break out of the loop
                     if(!genTable.get(i + 1).equals("==") && !genTable.get(i + 1).equals("!=") && !genTable.get(i + 1).equals("IntOp") && genTable.get(i + 1).length() > 3) {
                         stopAddingFirst = true;
                     }
@@ -712,7 +711,7 @@ public class CodeGen {
                             }
 
                             else {
-                                //Do nothing, only way we should be getting here is if we run into a close block token
+                                //Do nothing, only way we should be getting here is if we run into a close block token (again)
 
                             }
 
@@ -761,7 +760,7 @@ public class CodeGen {
                 }
 
                 addOpCodes("DO"); //Branch instruction - here we'll initialize the jump value for this loop
-                addOpCodes("J" + Integer.toString(branchNum));
+                addOpCodes("J" + Integer.toString(branchNum)); //Add a TEMPORARY jump value to the op codes for us to sort out later
                 jump.add("J" + Integer.toHexString(opCounter)); //Adds the counter value we want to branch to in our jump table to keep track of
                 branchNum++;
                 areWeJumping = true; //Set our jumping boolean to true, since we need to jump if the while loop isn't completed
@@ -771,7 +770,6 @@ public class CodeGen {
                     //testing to make sure I didn't break anything :P
                     System.out.println("default response is " + genTable.get(i));
                 break;
-
             }
         }
     }
@@ -808,7 +806,7 @@ public class CodeGen {
     }
 
     public void handleJump() {
-        //Initializes jump values for our while loops
+        //Initializes jump values for our while loops, a lot like handleStack
         for(int k = 0; k < jump.size(); k++) {
             for(int l = 0; l < opCodeList.size(); l++) {
                 if(opCodeList.get(l).equals("J" + Integer.toString(k))) {//J is used as a defining tag for our jumptable parsing
