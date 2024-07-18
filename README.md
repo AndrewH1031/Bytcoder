@@ -1,7 +1,7 @@
 # cmpt432-compilers
 A repository for my compiler code for cmpt432, taught by Alan Labouseur.
 
-For this project I'll be using Java. The language it accepts can be found in the project 1.pdf on professor Labouseur's website.
+For this project I used Java. The language it accepts can be found in the project overview pdf on professor Labouseur's website, linked here --> https://www.labouseur.com/courses/compilers/project1.pdf
 
 **HOW TO ACTUALLY MAKE ALL OF THIS FANCY LOOKING STUFF WORK (assuming you already have this downloaded):**
 1. Navigate to the "src" folder using your handy command shell (Windows key + R and type "cmd"). type "cd" and then drag the folder into the command shell. This will load the directory for you.
