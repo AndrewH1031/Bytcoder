@@ -1,4 +1,4 @@
-This is a simple compiler written in Java that outputs streams of Bytecode.
+This is a simple compiler written in Java that outputs streams of 6502 Bytecode.
 
 The language it accepts can be found in the project overview pdf on professor Labouseur's website, linked below.
 https://www.labouseur.com/courses/compilers/project1.pdf
